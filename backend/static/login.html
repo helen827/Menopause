@@ -1,0 +1,581 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>潮安登录</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg-top: #fffafa;
+      --bg-bottom: #f3eaf0;
+      --ink: #2d292b;
+      --muted: #776970;
+      --line: #e7dbe2;
+      --panel: rgba(255, 255, 255, 0.72);
+      --danger: #b42318;
+      --ok: #177245;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 50% 35%, rgba(255, 255, 255, 0.95), transparent 24%),
+        linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    .phone-shell {
+      width: min(100vw, 456px);
+      min-height: 100vh;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 24px 24px max(22px, env(safe-area-inset-bottom));
+    }
+
+    .brand {
+      width: 100%;
+      display: grid;
+      justify-items: center;
+      margin-bottom: 72px;
+    }
+
+    .logo-card {
+      width: 106px;
+      height: 106px;
+      display: grid;
+      place-items: center;
+      border-radius: 30px;
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow:
+        0 28px 72px rgba(117, 86, 104, 0.22),
+        inset 0 1px 0 rgba(255, 255, 255, 0.96);
+      transform: rotate(2deg);
+      margin-bottom: 42px;
+    }
+
+    .flower {
+      position: relative;
+      width: 58px;
+      height: 48px;
+    }
+
+    .flower::before,
+    .flower::after,
+    .petal {
+      content: "";
+      position: absolute;
+      background: #a27a8e;
+    }
+
+    .flower::before {
+      width: 23px;
+      height: 34px;
+      left: 5px;
+      bottom: 2px;
+      border-radius: 24px 24px 8px 24px;
+      transform: rotate(-52deg);
+    }
+
+    .flower::after {
+      width: 29px;
+      height: 39px;
+      right: 2px;
+      bottom: 1px;
+      border-radius: 28px 28px 28px 8px;
+      transform: rotate(52deg);
+    }
+
+    .petal {
+      width: 18px;
+      height: 30px;
+      left: 20px;
+      top: 0;
+      border-radius: 22px 22px 8px 8px;
+      transform: rotate(4deg);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 48px;
+      line-height: 1.05;
+      font-weight: 850;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 18px 0 0;
+      font-size: 22px;
+      line-height: 1.35;
+      font-weight: 760;
+      color: #746a70;
+    }
+
+    .account-copy {
+      margin: 0 0 18px;
+      font-size: 21px;
+      line-height: 1.35;
+      font-weight: 790;
+      color: #75646e;
+      text-align: center;
+    }
+
+    .actions,
+    .form-panel {
+      width: 100%;
+    }
+
+    .choice-button,
+    .primary-button,
+    .ghost-button {
+      width: 100%;
+      min-height: 64px;
+      border-radius: 32px;
+      border: 1px solid var(--line);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      font-size: 22px;
+      line-height: 1.2;
+      font-weight: 780;
+      color: #74636d;
+      cursor: pointer;
+      transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+    }
+
+    .choice-button {
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 8px 28px rgba(111, 88, 101, 0.08);
+    }
+
+    .choice-button + .choice-button {
+      margin-top: 16px;
+      background: rgba(246, 237, 242, 0.74);
+    }
+
+    .choice-button:active,
+    .primary-button:active,
+    .ghost-button:active {
+      transform: translateY(1px);
+    }
+
+    .choice-button svg,
+    .ghost-button svg {
+      width: 24px;
+      height: 24px;
+      flex: 0 0 auto;
+    }
+
+    .footer-link {
+      margin-top: 20px;
+      text-align: center;
+      color: #8c7c85;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .footer-link button {
+      border: 0;
+      background: transparent;
+      color: #75646e;
+      font-weight: 820;
+      padding: 0 0 2px;
+      border-bottom: 1px solid currentColor;
+      cursor: pointer;
+    }
+
+    .form-panel {
+      display: none;
+      border-radius: 28px;
+      border: 1px solid rgba(231, 219, 226, 0.9);
+      background: var(--panel);
+      padding: 24px;
+      box-shadow: 0 22px 60px rgba(111, 88, 101, 0.12);
+      backdrop-filter: blur(18px);
+    }
+
+    .form-panel.active {
+      display: block;
+    }
+
+    .actions.hidden,
+    .account-copy.hidden {
+      display: none;
+    }
+
+    .form-title {
+      margin: 0 0 6px;
+      font-size: 26px;
+      font-weight: 850;
+    }
+
+    .form-subtitle {
+      margin: 0 0 20px;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.5;
+      font-weight: 620;
+    }
+
+    label {
+      display: block;
+      margin: 16px 0 8px;
+      color: #6d5e67;
+      font-size: 14px;
+      font-weight: 760;
+    }
+
+    input {
+      width: 100%;
+      height: 50px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.86);
+      color: var(--ink);
+      outline: none;
+      padding: 0 15px;
+      font-size: 17px;
+      font-weight: 650;
+    }
+
+    input:focus {
+      border-color: #b892a6;
+      box-shadow: 0 0 0 4px rgba(184, 146, 166, 0.16);
+    }
+
+    .code-row {
+      display: grid;
+      grid-template-columns: 1fr 116px;
+      gap: 10px;
+    }
+
+    .send-button {
+      min-height: 50px;
+      border: 0;
+      border-radius: 16px;
+      background: #a27a8e;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 820;
+      cursor: pointer;
+    }
+
+    .primary-button {
+      min-height: 54px;
+      border: 0;
+      margin-top: 22px;
+      background: #2f292d;
+      color: #fff;
+      font-size: 18px;
+    }
+
+    .ghost-button {
+      min-height: 50px;
+      margin-top: 12px;
+      border-radius: 25px;
+      background: rgba(255, 255, 255, 0.48);
+      font-size: 16px;
+    }
+
+    button:disabled {
+      opacity: 0.58;
+      cursor: not-allowed;
+    }
+
+    .status {
+      min-height: 22px;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+      font-weight: 650;
+      text-align: center;
+    }
+
+    .status.error {
+      color: var(--danger);
+    }
+
+    .status.ok {
+      color: var(--ok);
+    }
+
+    pre {
+      display: none;
+      margin: 14px 0 0;
+      max-height: 220px;
+      overflow: auto;
+      border: 1px solid rgba(231, 219, 226, 0.95);
+      border-radius: 16px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.72);
+      color: #3a3035;
+      font-size: 12px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    pre.visible {
+      display: block;
+    }
+
+    @media (min-height: 760px) {
+      .brand {
+        margin-bottom: 78px;
+      }
+    }
+
+    @media (max-width: 380px) {
+      .phone-shell {
+        padding-inline: 18px;
+      }
+
+      h1 {
+        font-size: 42px;
+      }
+
+      .subtitle,
+      .choice-button {
+        font-size: 19px;
+      }
+
+      .account-copy {
+        font-size: 18px;
+      }
+
+      .code-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="phone-shell">
+    <section class="brand" aria-labelledby="title">
+      <div class="logo-card" aria-hidden="true">
+        <div class="flower"><span class="petal"></span></div>
+      </div>
+      <h1 id="title">潮安</h1>
+      <p class="subtitle">继续前，请先登录或注册</p>
+    </section>
+
+    <p id="accountCopy" class="account-copy">创建账号以保存你的记录与报告</p>
+
+    <section id="actions" class="actions" aria-label="登录方式">
+      <button id="mobileEntry" class="choice-button" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="7" y="2.8" width="10" height="18.4" rx="2.2"></rect>
+          <path d="M11 18h2"></path>
+        </svg>
+        使用手机号注册
+      </button>
+      <button id="wechatEntry" class="choice-button" type="button">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M9.4 5.2c-4 0-7.2 2.5-7.2 5.7 0 1.8 1 3.4 2.7 4.4l-.7 2.1 2.5-1.2c.8.2 1.7.4 2.7.4.3 0 .6 0 .9-.1a5.9 5.9 0 0 1-.3-1.8c0-3.2 3-5.8 6.8-6.1-.9-2-3.8-3.4-7.4-3.4Zm-2.5 3.2a.8.8 0 1 1 0 1.6.8.8 0 0 1 0-1.6Zm5 0a.8.8 0 1 1 0 1.6.8.8 0 0 1 0-1.6Z"></path>
+          <path d="M17.1 10.1c-3 0-5.5 2-5.5 4.5s2.5 4.5 5.5 4.5c.7 0 1.4-.1 2-.3l2 1-.6-1.7c1.3-.8 2.1-2 2.1-3.5 0-2.5-2.4-4.5-5.5-4.5Zm-1.8 2.8a.7.7 0 1 1 0 1.4.7.7 0 0 1 0-1.4Zm3.8 0a.7.7 0 1 1 0 1.4.7.7 0 0 1 0-1.4Z"></path>
+        </svg>
+        使用微信号注册
+      </button>
+      <div class="footer-link">已有账号？ <button id="loginEntry" type="button">登录</button></div>
+    </section>
+
+    <section id="formPanel" class="form-panel" aria-labelledby="formTitle">
+      <h2 id="formTitle" class="form-title">手机号登录</h2>
+      <p class="form-subtitle">验证码将发送到你的手机号。</p>
+      <form id="loginForm">
+        <label for="mobile">手机号</label>
+        <input id="mobile" name="mobile" inputmode="numeric" autocomplete="tel" maxlength="11" placeholder="13800138000">
+
+        <label for="code">验证码</label>
+        <div class="code-row">
+          <input id="code" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="6 位验证码">
+          <button id="sendCode" class="send-button" type="button">发送验证码</button>
+        </div>
+
+        <button id="loginButton" class="primary-button" type="submit">登录并继续</button>
+        <button id="backButton" class="ghost-button" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m15 18-6-6 6-6"></path>
+          </svg>
+          返回
+        </button>
+      </form>
+
+      <div id="status" class="status" role="status">等待输入手机号</div>
+      <pre id="result"></pre>
+    </section>
+  </main>
+
+  <script>
+    const actions = document.querySelector("#actions");
+    const accountCopy = document.querySelector("#accountCopy");
+    const formPanel = document.querySelector("#formPanel");
+    const mobileEntry = document.querySelector("#mobileEntry");
+    const loginEntry = document.querySelector("#loginEntry");
+    const wechatEntry = document.querySelector("#wechatEntry");
+    const backButton = document.querySelector("#backButton");
+    const form = document.querySelector("#loginForm");
+    const mobileInput = document.querySelector("#mobile");
+    const codeInput = document.querySelector("#code");
+    const sendButton = document.querySelector("#sendCode");
+    const loginButton = document.querySelector("#loginButton");
+    const statusBox = document.querySelector("#status");
+    const resultBox = document.querySelector("#result");
+
+    let lastOutId = "";
+    let cooldownTimer = null;
+
+    function openForm(message = "等待输入手机号") {
+      actions.classList.add("hidden");
+      accountCopy.classList.add("hidden");
+      formPanel.classList.add("active");
+      setStatus(message);
+      mobileInput.focus();
+    }
+
+    function closeForm() {
+      formPanel.classList.remove("active");
+      actions.classList.remove("hidden");
+      accountCopy.classList.remove("hidden");
+      resultBox.classList.remove("visible");
+      setStatus("等待输入手机号");
+    }
+
+    function setStatus(message, type = "") {
+      statusBox.textContent = message;
+      statusBox.className = `status ${type}`.trim();
+    }
+
+    function showResult(data) {
+      resultBox.textContent = JSON.stringify(data, null, 2);
+      resultBox.classList.add("visible");
+    }
+
+    function validMobile() {
+      return /^\d{11}$/.test(mobileInput.value.trim());
+    }
+
+    function validCode() {
+      return /^\d{4,8}$/.test(codeInput.value.trim());
+    }
+
+    async function postJson(url, payload) {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(payload),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const error = data.error || data.message || `请求失败：${response.status}`;
+        throw new Error(error);
+      }
+      return data;
+    }
+
+    function startCooldown(seconds = 60) {
+      let left = seconds;
+      sendButton.disabled = true;
+      sendButton.textContent = `${left}s`;
+      clearInterval(cooldownTimer);
+      cooldownTimer = setInterval(() => {
+        left -= 1;
+        if (left <= 0) {
+          clearInterval(cooldownTimer);
+          sendButton.disabled = false;
+          sendButton.textContent = "发送验证码";
+          return;
+        }
+        sendButton.textContent = `${left}s`;
+      }, 1000);
+    }
+
+    mobileEntry.addEventListener("click", () => openForm());
+    loginEntry.addEventListener("click", () => openForm());
+    backButton.addEventListener("click", closeForm);
+    wechatEntry.addEventListener("click", () => openForm("微信登录暂未接入，请使用手机号"));
+
+    sendButton.addEventListener("click", async () => {
+      resultBox.classList.remove("visible");
+      if (!validMobile()) {
+        setStatus("请输入 11 位手机号", "error");
+        mobileInput.focus();
+        return;
+      }
+
+      sendButton.disabled = true;
+      setStatus("正在发送验证码...");
+      try {
+        const data = await postJson("/api/send_code", {mobile: mobileInput.value.trim()});
+        lastOutId = data.out_id || "";
+        setStatus("验证码已发送，请查看短信", "ok");
+        showResult(data);
+        startCooldown();
+      } catch (error) {
+        sendButton.disabled = false;
+        setStatus(error.message, "error");
+      }
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      resultBox.classList.remove("visible");
+
+      if (!validMobile()) {
+        setStatus("请输入 11 位手机号", "error");
+        mobileInput.focus();
+        return;
+      }
+
+      if (!validCode()) {
+        setStatus("请输入正确的验证码", "error");
+        codeInput.focus();
+        return;
+      }
+
+      loginButton.disabled = true;
+      setStatus("正在登录...");
+      try {
+        const payload = {
+          mobile: mobileInput.value.trim(),
+          code: codeInput.value.trim(),
+        };
+        if (lastOutId) {
+          payload.out_id = lastOutId;
+        }
+        const data = await postJson("/api/login", payload);
+        setStatus("登录成功", "ok");
+        showResult(data);
+      } catch (error) {
+        setStatus(error.message, "error");
+      } finally {
+        loginButton.disabled = false;
+      }
+    });
+
+    mobileInput.addEventListener("input", () => {
+      mobileInput.value = mobileInput.value.replace(/\D/g, "").slice(0, 11);
+    });
+
+    codeInput.addEventListener("input", () => {
+      codeInput.value = codeInput.value.replace(/\D/g, "").slice(0, 8);
+    });
+  </script>
+</body>
+</html>

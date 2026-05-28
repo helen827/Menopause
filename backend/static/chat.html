@@ -1,0 +1,1269 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>潮安聊天测试</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f2f5;
+      --panel: #fffdfd;
+      --panel-soft: #fbf7f9;
+      --ink: #2d292b;
+      --muted: #776970;
+      --line: #e5d8df;
+      --accent: #9d7489;
+      --accent-strong: #2f292d;
+      --ok: #19784d;
+      --warn: #a15c16;
+      --danger: #b42318;
+      --bubble-user: #2f292d;
+      --bubble-system: #fff;
+      --shadow: 0 20px 60px rgba(93, 69, 82, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.74), rgba(247, 242, 245, 0.94)),
+        var(--bg);
+    }
+
+    button,
+    input,
+    textarea {
+      font: inherit;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr);
+      gap: 0;
+    }
+
+    .sidebar {
+      border-right: 1px solid var(--line);
+      background: rgba(255, 253, 253, 0.82);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 4px;
+    }
+
+    .mark {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      background: #fff;
+      color: var(--accent);
+      box-shadow: 0 10px 28px rgba(93, 69, 82, 0.12);
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.1;
+      font-weight: 850;
+      letter-spacing: 0;
+    }
+
+    .brand p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 16px;
+      box-shadow: 0 10px 30px rgba(93, 69, 82, 0.06);
+    }
+
+    .panel-title {
+      margin: 0 0 12px;
+      color: #5c4e56;
+      font-size: 13px;
+      font-weight: 820;
+    }
+
+    .status-row,
+    .meta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      min-height: 30px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 28px;
+      padding: 0 10px;
+      border-radius: 14px;
+      background: var(--panel-soft);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--warn);
+    }
+
+    .badge.ok .dot {
+      background: var(--ok);
+    }
+
+    .badge.error .dot {
+      background: var(--danger);
+    }
+
+    label {
+      display: block;
+      margin: 12px 0 7px;
+      color: #695a63;
+      font-size: 12px;
+      font-weight: 820;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink);
+      outline: none;
+    }
+
+    input {
+      height: 42px;
+      padding: 0 12px;
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    textarea {
+      min-height: 86px;
+      resize: vertical;
+      padding: 12px;
+      line-height: 1.45;
+      font-size: 15px;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(157, 116, 137, 0.14);
+    }
+
+    .button-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .button-row.single {
+      grid-template-columns: 1fr;
+    }
+
+    button {
+      height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: #5f5059;
+      font-size: 13px;
+      font-weight: 820;
+      cursor: pointer;
+      transition: transform 0.14s ease, background 0.14s ease, border-color 0.14s ease;
+    }
+
+    button.primary {
+      border-color: var(--accent-strong);
+      background: var(--accent-strong);
+      color: #fff;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    button:disabled {
+      opacity: 0.58;
+      cursor: not-allowed;
+    }
+
+    .hint {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .prompt-list,
+    .knowledge-list {
+      display: grid;
+      gap: 10px;
+      max-height: 260px;
+      overflow: auto;
+      margin-top: 12px;
+    }
+
+    .prompt-card,
+    .knowledge-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel-soft);
+      padding: 10px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .prompt-card.active,
+    .knowledge-card.active {
+      border-color: var(--accent);
+      background: #fff;
+    }
+
+    .prompt-card.hidden-prompt {
+      background: rgba(251, 247, 249, 0.72);
+    }
+
+    .prompt-card h3,
+    .knowledge-card h3 {
+      margin: 0;
+      font-size: 13px;
+      line-height: 1.3;
+      font-weight: 850;
+      color: #3b3337;
+    }
+
+    .prompt-card p,
+    .knowledge-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .prompt-card pre,
+    .knowledge-card pre {
+      margin: 0;
+      max-height: 90px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: #4b4046;
+      font-size: 12px;
+      line-height: 1.45;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    .prompt-card button,
+    .knowledge-card button {
+      height: 34px;
+      margin-top: 2px;
+    }
+
+    .prompt-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 760;
+    }
+
+    .checkbox-row input {
+      width: 16px;
+      height: 16px;
+      padding: 0;
+    }
+
+    .chat {
+      min-width: 0;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      height: 100vh;
+    }
+
+    .topbar {
+      min-height: 72px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 253, 253, 0.86);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 16px 24px;
+    }
+
+    .topbar h2 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.2;
+      font-weight: 850;
+      letter-spacing: 0;
+    }
+
+    .topbar p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .messages {
+      overflow: auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .empty {
+      margin: auto;
+      max-width: 420px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.6;
+      font-weight: 650;
+    }
+
+    .message {
+      max-width: min(680px, 86%);
+      display: grid;
+      gap: 6px;
+    }
+
+    .message.mine {
+      align-self: flex-end;
+    }
+
+    .message.assistant {
+      align-self: flex-start;
+    }
+
+    .bubble {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px 14px;
+      background: var(--bubble-system);
+      box-shadow: 0 8px 22px rgba(93, 69, 82, 0.05);
+      color: var(--ink);
+      font-size: 15px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .mine .bubble {
+      border-color: var(--bubble-user);
+      background: var(--bubble-user);
+      color: #fff;
+    }
+
+    .assistant .bubble {
+      border-color: var(--line);
+      background: #fff;
+      color: var(--ink);
+    }
+
+    .message-meta {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 720;
+    }
+
+    .prompt-meta {
+      border: 1px solid rgba(229, 216, 223, 0.85);
+      border-radius: 8px;
+      padding: 8px 10px;
+      background: rgba(255, 255, 255, 0.72);
+      color: #665760;
+      font-size: 11px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .mine .message-meta {
+      text-align: right;
+    }
+
+    .composer {
+      border-top: 1px solid var(--line);
+      background: rgba(255, 253, 253, 0.9);
+      padding: 16px 24px max(16px, env(safe-area-inset-bottom));
+    }
+
+    .composer-inner {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 110px;
+      gap: 12px;
+      align-items: end;
+    }
+
+    .composer textarea {
+      min-height: 50px;
+      max-height: 140px;
+    }
+
+    .log {
+      min-height: 42px;
+      max-height: 110px;
+      margin-top: 12px;
+      overflow: auto;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+
+    @media (max-width: 860px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .chat {
+        height: auto;
+        min-height: 66vh;
+      }
+
+      .messages {
+        min-height: 420px;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .sidebar,
+      .topbar,
+      .messages,
+      .composer {
+        padding-inline: 16px;
+      }
+
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .composer-inner {
+        grid-template-columns: 1fr;
+      }
+
+      .message {
+        max-width: 94%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <aside class="sidebar">
+      <section class="brand" aria-label="潮安">
+        <div class="mark" aria-hidden="true">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 3.1c1.9 2.3 2.8 4.2 2.8 5.9 0 .4 0 .7-.1 1.1 1.4-1 3.3-1.5 5.9-1.6-.3 3.1-1.3 5.4-3 6.9-1.5 1.3-3.4 1.9-5.6 1.9s-4.1-.6-5.6-1.9c-1.7-1.5-2.7-3.8-3-6.9 2.6.1 4.5.6 5.9 1.6C9.1 9.7 9.1 9.4 9.1 9c0-1.7.9-3.6 2.9-5.9Z"></path>
+          </svg>
+        </div>
+        <div>
+          <h1>潮安 Chat</h1>
+          <p>网页和 App 共用后端测试</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2 class="panel-title">连接</h2>
+        <div class="status-row">
+          <span>登录态</span>
+          <span id="loginBadge" class="badge"><span class="dot"></span>检查中</span>
+        </div>
+        <div class="status-row">
+          <span>WebSocket</span>
+          <span id="wsBadge" class="badge"><span class="dot"></span>未连接</span>
+        </div>
+        <div class="button-row">
+          <button id="checkLoginButton" type="button">检查登录</button>
+          <button id="openLoginButton" type="button">打开登录</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2 class="panel-title">Chat</h2>
+        <label for="userIdInput">测试 user_id</label>
+        <input id="userIdInput" maxlength="32" spellcheck="false" placeholder="未登录时可填 32 位 uuid">
+        <div class="button-row">
+          <button id="ensureButton" class="primary" type="button">准备 Chat</button>
+          <button id="loadButton" type="button">加载最近</button>
+        </div>
+        <label for="chatIdInput">chat_id</label>
+        <input id="chatIdInput" maxlength="32" spellcheck="false" placeholder="准备后自动填入">
+        <label for="lastCommentInput">last_comment_id</label>
+        <input id="lastCommentInput" maxlength="32" spellcheck="false" placeholder="可选">
+        <div class="button-row single">
+          <button id="connectButton" type="button">连接当前 chat_id</button>
+        </div>
+        <p class="hint">已经网页登录时不用填 user_id；没有 cookie 时，填一个 32 位 hex user_id 可以直接做本地联调。</p>
+      </section>
+
+      <section class="panel">
+        <h2 class="panel-title">System Prompt</h2>
+        <div class="status-row">
+          <span>当前版本</span>
+          <span id="promptBadge" class="badge"><span class="dot"></span>未选择</span>
+        </div>
+        <label for="promptTitleInput">title</label>
+        <input id="promptTitleInput" maxlength="120" placeholder="例如：温柔记录助手 v1">
+        <label for="promptDescInput">desc</label>
+        <input id="promptDescInput" maxlength="300" placeholder="这个版本的用途或实验假设">
+        <label for="systemPromptInput">system_prompt</label>
+        <textarea id="systemPromptInput" placeholder="写入系统提示词，每次 chat submit 会把当前版本快照存到消息里"></textarea>
+        <label class="checkbox-row">
+          <input id="activatePromptInput" type="checkbox" checked>
+          创建后立即选用
+        </label>
+        <label class="checkbox-row">
+          <input id="showoffPromptInput" type="checkbox" checked>
+          创建后展开 prompt 内容
+        </label>
+        <div class="button-row">
+          <button id="createPromptButton" class="primary" type="button">创建版本</button>
+          <button id="loadPromptsButton" type="button">刷新列表</button>
+        </div>
+        <div id="promptList" class="prompt-list">
+          <p class="hint">准备 Chat 后会显示 prompt 版本。</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2 class="panel-title">知识库</h2>
+        <label for="knowledgeTitleInput">title</label>
+        <input id="knowledgeTitleInput" maxlength="120" placeholder="例如：潮热护理建议">
+        <label for="knowledgeCategoryInput">category</label>
+        <input id="knowledgeCategoryInput" maxlength="80" placeholder="例如：症状 / 医学解释 / 产品规则">
+        <label for="knowledgeTagsInput">tags</label>
+        <input id="knowledgeTagsInput" maxlength="240" placeholder="逗号分隔，例如：潮热,夜汗,睡眠">
+        <label for="knowledgeContentInput">content</label>
+        <textarea id="knowledgeContentInput" placeholder="写入你希望 AI 优先参考的内容。用户提问命中后，会作为后台参考喂给模型。"></textarea>
+        <label class="checkbox-row">
+          <input id="knowledgeActiveInput" type="checkbox" checked>
+          立即启用
+        </label>
+        <div class="button-row">
+          <button id="createKnowledgeButton" class="primary" type="button">加入知识库</button>
+          <button id="loadKnowledgeButton" type="button">刷新列表</button>
+        </div>
+        <label for="knowledgeSearchInput">搜索测试</label>
+        <input id="knowledgeSearchInput" placeholder="输入关键词，测试会命中的知识">
+        <div class="button-row single">
+          <button id="searchKnowledgeButton" type="button">检索知识库</button>
+        </div>
+        <div id="knowledgeList" class="knowledge-list">
+          <p class="hint">这里会显示你录入的知识条目。</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2 class="panel-title">当前信息</h2>
+        <div class="meta-row"><span>用户</span><span id="userMeta">none</span></div>
+        <div class="meta-row"><span>总消息</span><span id="countMeta">0</span></div>
+        <div class="meta-row"><span>showoff</span><span id="showoffMeta">none</span></div>
+        <div class="meta-row"><span>block</span><span id="blockMeta">none</span></div>
+      </section>
+    </aside>
+
+    <section class="chat" aria-label="聊天">
+      <header class="topbar">
+        <div>
+          <h2>AI 对话测试</h2>
+          <p id="subtitle">先准备 Chat，然后发送消息。App 订阅同一个 block_id/chat_id 时可收到推送。</p>
+        </div>
+        <span id="chatBadge" class="badge"><span class="dot"></span>未准备</span>
+      </header>
+
+      <div id="messages" class="messages">
+        <div class="empty">这里会显示 `/api/chat/load` 读回来的消息，以及 WebSocket 收到的新消息。</div>
+      </div>
+
+      <footer class="composer">
+        <div class="composer-inner">
+          <textarea id="contentInput" placeholder="输入一条消息，按 Cmd/Ctrl + Enter 发送"></textarea>
+          <button id="sendButton" class="primary" type="button">发送</button>
+        </div>
+        <div id="log" class="log" role="status"></div>
+      </footer>
+    </section>
+  </main>
+
+  <script>
+    const loginBadge = document.querySelector("#loginBadge");
+    const wsBadge = document.querySelector("#wsBadge");
+    const chatBadge = document.querySelector("#chatBadge");
+    const promptBadge = document.querySelector("#promptBadge");
+    const userMeta = document.querySelector("#userMeta");
+    const countMeta = document.querySelector("#countMeta");
+    const showoffMeta = document.querySelector("#showoffMeta");
+    const blockMeta = document.querySelector("#blockMeta");
+    const userIdInput = document.querySelector("#userIdInput");
+    const chatIdInput = document.querySelector("#chatIdInput");
+    const lastCommentInput = document.querySelector("#lastCommentInput");
+    const promptTitleInput = document.querySelector("#promptTitleInput");
+    const promptDescInput = document.querySelector("#promptDescInput");
+    const systemPromptInput = document.querySelector("#systemPromptInput");
+    const activatePromptInput = document.querySelector("#activatePromptInput");
+    const showoffPromptInput = document.querySelector("#showoffPromptInput");
+    const promptList = document.querySelector("#promptList");
+    const knowledgeTitleInput = document.querySelector("#knowledgeTitleInput");
+    const knowledgeCategoryInput = document.querySelector("#knowledgeCategoryInput");
+    const knowledgeTagsInput = document.querySelector("#knowledgeTagsInput");
+    const knowledgeContentInput = document.querySelector("#knowledgeContentInput");
+    const knowledgeActiveInput = document.querySelector("#knowledgeActiveInput");
+    const knowledgeSearchInput = document.querySelector("#knowledgeSearchInput");
+    const knowledgeList = document.querySelector("#knowledgeList");
+    const contentInput = document.querySelector("#contentInput");
+    const messages = document.querySelector("#messages");
+    const logBox = document.querySelector("#log");
+
+    const checkLoginButton = document.querySelector("#checkLoginButton");
+    const openLoginButton = document.querySelector("#openLoginButton");
+    const ensureButton = document.querySelector("#ensureButton");
+    const loadButton = document.querySelector("#loadButton");
+    const connectButton = document.querySelector("#connectButton");
+    const createPromptButton = document.querySelector("#createPromptButton");
+    const loadPromptsButton = document.querySelector("#loadPromptsButton");
+    const createKnowledgeButton = document.querySelector("#createKnowledgeButton");
+    const loadKnowledgeButton = document.querySelector("#loadKnowledgeButton");
+    const searchKnowledgeButton = document.querySelector("#searchKnowledgeButton");
+    const sendButton = document.querySelector("#sendButton");
+
+    let sessionUserId = "";
+    let currentChatId = "";
+    let currentBlockId = "";
+    let activePromptId = "";
+    let socket = null;
+    let renderedIds = new Set();
+
+    function setBadge(element, label, type = "") {
+      element.className = `badge ${type}`.trim();
+      element.innerHTML = `<span class="dot"></span>${label}`;
+    }
+
+    function log(message) {
+      const time = new Date().toLocaleTimeString("zh-CN", {hour12: false});
+      logBox.textContent = `[${time}] ${message}\n${logBox.textContent}`.trim();
+    }
+
+    function isHex32(value) {
+      return /^[0-9a-fA-F]{32}$/.test(String(value || "").trim());
+    }
+
+    function sanitizeHexInput(input) {
+      input.value = input.value.replace(/[^0-9a-fA-F]/g, "").slice(0, 32).toLowerCase();
+    }
+
+    async function requestJson(url, options = {}) {
+      const response = await fetch(url, {
+        credentials: "same-origin",
+        ...options,
+        headers: {
+          ...(options.headers || {}),
+        },
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || `请求失败：${response.status}`);
+      }
+      return data;
+    }
+
+    function renderEmpty() {
+      messages.innerHTML = "";
+      renderDailyGreeting();
+      messages.insertAdjacentHTML("beforeend", `<div class="empty">暂无消息。发送一条，看看链式 block 如何开始。</div>`);
+    }
+
+    function isCommentFromToday(comment) {
+      if (!comment || !comment.createtime) {
+        return false;
+      }
+      const date = new Date(comment.createtime);
+      if (Number.isNaN(date.getTime())) {
+        return false;
+      }
+      const now = new Date();
+      return date.getFullYear() === now.getFullYear()
+        && date.getMonth() === now.getMonth()
+        && date.getDate() === now.getDate();
+    }
+
+    function renderDailyGreeting() {
+      const item = document.createElement("article");
+      item.className = "message assistant daily-greeting";
+      item.innerHTML = `
+        <div class="bubble"></div>
+        <div class="message-meta">daily greeting</div>
+      `;
+      item.querySelector(".bubble").textContent = "今天过得怎么样？可以随便说说身体、心情或者睡眠，想到什么说什么就好。";
+      messages.appendChild(item);
+    }
+
+    function renderComment(comment, fromWs = false) {
+      if (!comment || !comment.comment_id || renderedIds.has(comment.comment_id)) {
+        return;
+      }
+      const empty = messages.querySelector(".empty");
+      if (empty) {
+        empty.remove();
+      }
+      renderedIds.add(comment.comment_id);
+      const role = comment.role || "user";
+      const mine = role !== "assistant";
+      const item = document.createElement("article");
+      item.className = `message ${mine ? "mine" : "assistant"}`.trim();
+      const created = comment.createtime ? new Date(comment.createtime).toLocaleString("zh-CN", {hour12: false}) : "";
+      item.innerHTML = `
+        <div class="bubble"></div>
+        <div class="message-meta">${role} · ${fromWs ? "WS" : "API"} · ${created} · ${comment.comment_id}</div>
+      `;
+      item.querySelector(".bubble").textContent = comment.content || "";
+      messages.appendChild(item);
+      messages.scrollTop = messages.scrollHeight;
+      lastCommentInput.value = comment.comment_id;
+    }
+
+    function updateChatMeta(data) {
+      if (!data) {
+        return;
+      }
+      if (data.chat_id) {
+        currentChatId = data.chat_id;
+        chatIdInput.value = currentChatId;
+        setBadge(chatBadge, "已准备", "ok");
+      }
+      if (data.active_prompt_id !== undefined) {
+        activePromptId = data.active_prompt_id || activePromptId;
+        setBadge(promptBadge, activePromptId ? "已选用" : "未选择", activePromptId ? "ok" : "");
+      }
+      if (data.block_id !== undefined) {
+        currentBlockId = data.block_id || currentBlockId;
+        blockMeta.textContent = data.block_id || "none";
+      }
+      if (data.total_comments !== undefined) {
+        countMeta.textContent = data.total_comments;
+      }
+      if (data.showoff !== undefined) {
+        showoffMeta.textContent = data.showoff ? "on" : "off";
+      }
+    }
+
+    async function checkLogin() {
+      try {
+        const data = await requestJson("/api/check_login");
+        if (data.logged_in) {
+          sessionUserId = data.block_id;
+          userMeta.textContent = data.mobile || data.block_id;
+          userIdInput.value = "";
+          setBadge(loginBadge, "已登录", "ok");
+          log(`登录用户：${data.block_id}`);
+          return data;
+        }
+        setBadge(loginBadge, "未登录");
+        userMeta.textContent = "none";
+        log("没有登录 cookie，可使用测试 user_id");
+        return data;
+      } catch (error) {
+        setBadge(loginBadge, "检查失败", "error");
+        log(error.message);
+        return null;
+      }
+    }
+
+    async function ensureChat() {
+      const userId = userIdInput.value.trim();
+      const payload = {};
+      if (userId) {
+        if (!isHex32(userId)) {
+          log("测试 user_id 必须是 32 位 hex");
+          userIdInput.focus();
+          return;
+        }
+        payload.user_id = userId;
+      }
+      ensureButton.disabled = true;
+      try {
+        const data = await requestJson("/api/chat/ensure", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify(payload),
+        });
+        updateChatMeta(data);
+        userMeta.textContent = data.user_entity_id || sessionUserId || "none";
+        log(data.created ? "已创建新的 chat" : "已返回已有 chat");
+        await loadPrompts();
+        await loadChat();
+        connectWs();
+      } catch (error) {
+        log(error.message);
+        if (/login required/i.test(error.message)) {
+          setBadge(loginBadge, "需要登录", "error");
+        }
+      } finally {
+        ensureButton.disabled = false;
+      }
+    }
+
+    function renderPrompts(data) {
+      if (!data || data === "none" || !Array.isArray(data.prompts)) {
+        promptList.innerHTML = `<p class="hint">暂无 prompt 版本。</p>`;
+        setBadge(promptBadge, "未选择");
+        return;
+      }
+      activePromptId = data.active_prompt_id || "";
+      setBadge(promptBadge, activePromptId ? "已选用" : "未选择", activePromptId ? "ok" : "");
+      if (data.showoff !== undefined) {
+        showoffMeta.textContent = data.showoff ? "on" : "off";
+      }
+      if (!data.prompts.length) {
+        promptList.innerHTML = `<p class="hint">暂无 prompt 版本。创建一个版本后，之后发送的消息会带上它的快照。</p>`;
+        return;
+      }
+      promptList.innerHTML = "";
+      for (const prompt of data.prompts) {
+        const card = document.createElement("article");
+        const hidden = prompt.showoff === false;
+        card.className = `prompt-card ${prompt.is_active ? "active" : ""} ${hidden ? "hidden-prompt" : ""}`.trim();
+        const created = prompt.createtime ? new Date(prompt.createtime).toLocaleString("zh-CN", {hour12: false}) : "";
+        card.innerHTML = `
+          <h3></h3>
+          <p></p>
+          <p></p>
+          <pre></pre>
+          <div class="prompt-actions">
+            <button type="button" data-action="select"></button>
+            <button type="button" data-action="toggle"></button>
+          </div>
+        `;
+        card.querySelector("h3").textContent = hidden ? `已收起 Prompt${prompt.is_active ? " · 当前" : ""}` : `${prompt.title}${prompt.is_active ? " · 当前" : ""}`;
+        card.querySelectorAll("p")[0].textContent = hidden ? "当前页面已收起 title、desc、system_prompt 和 prompt_id。" : (prompt.desc || "无描述");
+        card.querySelectorAll("p")[1].textContent = hidden ? `${created} · showoff:off` : `${created} · ${prompt.prompt_id} · showoff:on`;
+        card.querySelector("pre").textContent = hidden ? "内容已收起" : (prompt.system_prompt || "");
+        const selectButton = card.querySelector('[data-action="select"]');
+        selectButton.textContent = prompt.is_active ? "正在使用" : "选用";
+        selectButton.disabled = !!prompt.is_active;
+        selectButton.addEventListener("click", () => selectPrompt(prompt.prompt_id));
+        const toggleButton = card.querySelector('[data-action="toggle"]');
+        toggleButton.textContent = hidden ? "展开" : "收起";
+        toggleButton.addEventListener("click", () => togglePromptShowoff(prompt.prompt_id, !prompt.showoff));
+        promptList.appendChild(card);
+      }
+    }
+
+    async function loadPrompts() {
+      const chatId = chatIdInput.value.trim();
+      if (!isHex32(chatId)) {
+        promptList.innerHTML = `<p class="hint">请先准备或填写 32 位 chat_id。</p>`;
+        return;
+      }
+      try {
+        const result = await requestJson(`/api/chat/prompts/list?chat_id=${encodeURIComponent(chatId)}`);
+        renderPrompts(result.data);
+        log("已加载 prompt 版本");
+      } catch (error) {
+        log(error.message);
+      }
+    }
+
+    async function createPrompt() {
+      const chatId = chatIdInput.value.trim();
+      const title = promptTitleInput.value.trim();
+      const desc = promptDescInput.value.trim();
+      const systemPrompt = systemPromptInput.value.trim();
+      if (!isHex32(chatId)) {
+        log("请先准备或填写 32 位 chat_id");
+        return;
+      }
+      if (!title) {
+        promptTitleInput.focus();
+        log("prompt title 不能为空");
+        return;
+      }
+      if (!systemPrompt) {
+        systemPromptInput.focus();
+        log("system_prompt 不能为空");
+        return;
+      }
+      createPromptButton.disabled = true;
+      try {
+        const result = await requestJson("/api/chat/prompts/create", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            chat_id: chatId,
+            title,
+            desc,
+            system_prompt: systemPrompt,
+            activate: activatePromptInput.checked,
+            showoff: showoffPromptInput.checked,
+          }),
+        });
+        renderPrompts(result.data);
+        promptTitleInput.value = "";
+        promptDescInput.value = "";
+        systemPromptInput.value = "";
+        log(`已创建 prompt：${result.prompt.prompt_id}`);
+      } catch (error) {
+        log(error.message);
+      } finally {
+        createPromptButton.disabled = false;
+      }
+    }
+
+    async function selectPrompt(promptId) {
+      const chatId = chatIdInput.value.trim();
+      if (!isHex32(chatId) || !isHex32(promptId)) {
+        log("chat_id 或 prompt_id 无效");
+        return;
+      }
+      try {
+        const result = await requestJson("/api/chat/prompts/select", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({chat_id: chatId, prompt_id: promptId}),
+        });
+        renderPrompts(result.data);
+        log(`已选用 prompt：${promptId}`);
+      } catch (error) {
+        log(error.message);
+      }
+    }
+
+    async function togglePromptShowoff(promptId, showoff) {
+      const chatId = chatIdInput.value.trim();
+      if (!isHex32(chatId) || !isHex32(promptId)) {
+        log("chat_id 或 prompt_id 无效");
+        return;
+      }
+      try {
+        const result = await requestJson("/api/chat/prompts/showoff", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({chat_id: chatId, prompt_id: promptId, showoff}),
+        });
+        renderPrompts(result.data);
+        log(showoff ? "已展开 prompt" : "已收起 prompt");
+      } catch (error) {
+        log(error.message);
+      }
+    }
+
+    function renderKnowledgeItems(data) {
+      if (!data || data === "none" || !Array.isArray(data) || !data.length) {
+        knowledgeList.innerHTML = `<p class="hint">暂无知识条目。先录入一条，再发送相关问题测试回答。</p>`;
+        return;
+      }
+      knowledgeList.innerHTML = "";
+      for (const item of data) {
+        const card = document.createElement("article");
+        card.className = `knowledge-card ${item.is_active ? "active" : ""}`.trim();
+        const updated = item.updatetime ? new Date(item.updatetime).toLocaleString("zh-CN", {hour12: false}) : "";
+        const snippet = item.snippet || item.content || "";
+        card.innerHTML = `
+          <h3></h3>
+          <p></p>
+          <p></p>
+          <pre></pre>
+          <div class="button-row single">
+            <button type="button"></button>
+          </div>
+        `;
+        card.querySelector("h3").textContent = `${item.title}${item.is_active ? " · 已启用" : " · 已停用"}`;
+        card.querySelectorAll("p")[0].textContent = [item.category, item.tags].filter(Boolean).join(" · ") || "未分类";
+        card.querySelectorAll("p")[1].textContent = `${updated} · ${item.knowledge_id}${item.score ? ` · score:${item.score}` : ""}`;
+        card.querySelector("pre").textContent = snippet;
+        const toggleButton = card.querySelector("button");
+        toggleButton.textContent = item.is_active ? "停用" : "启用";
+        toggleButton.addEventListener("click", () => toggleKnowledgeActive(item.knowledge_id, !item.is_active));
+        knowledgeList.appendChild(card);
+      }
+    }
+
+    async function loadKnowledge() {
+      try {
+        const result = await requestJson("/api/knowledge/list?limit=30");
+        renderKnowledgeItems(result.data);
+        log("已加载知识库");
+      } catch (error) {
+        log(error.message);
+      }
+    }
+
+    async function searchKnowledge() {
+      const q = knowledgeSearchInput.value.trim() || contentInput.value.trim();
+      if (!q) {
+        knowledgeSearchInput.focus();
+        log("请输入搜索关键词");
+        return;
+      }
+      try {
+        const result = await requestJson(`/api/knowledge/search?q=${encodeURIComponent(q)}&limit=8`);
+        renderKnowledgeItems(result.data);
+        log("已检索知识库");
+      } catch (error) {
+        log(error.message);
+      }
+    }
+
+    async function createKnowledge() {
+      const title = knowledgeTitleInput.value.trim();
+      const category = knowledgeCategoryInput.value.trim();
+      const tags = knowledgeTagsInput.value.trim();
+      const content = knowledgeContentInput.value.trim();
+      if (!title) {
+        knowledgeTitleInput.focus();
+        log("知识 title 不能为空");
+        return;
+      }
+      if (!content) {
+        knowledgeContentInput.focus();
+        log("知识 content 不能为空");
+        return;
+      }
+      createKnowledgeButton.disabled = true;
+      try {
+        await requestJson("/api/knowledge/create", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            title,
+            category,
+            tags,
+            content,
+            is_active: knowledgeActiveInput.checked,
+          }),
+        });
+        knowledgeTitleInput.value = "";
+        knowledgeCategoryInput.value = "";
+        knowledgeTagsInput.value = "";
+        knowledgeContentInput.value = "";
+        log("已加入知识库");
+        await loadKnowledge();
+      } catch (error) {
+        log(error.message);
+      } finally {
+        createKnowledgeButton.disabled = false;
+      }
+    }
+
+    async function toggleKnowledgeActive(knowledgeId, isActive) {
+      try {
+        await requestJson("/api/knowledge/active", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({knowledge_id: knowledgeId, is_active: isActive}),
+        });
+        log(isActive ? "已启用知识条目" : "已停用知识条目");
+        await loadKnowledge();
+      } catch (error) {
+        log(error.message);
+      }
+    }
+
+    async function loadChat() {
+      const chatId = chatIdInput.value.trim();
+      const lastCommentId = lastCommentInput.value.trim();
+      if (!isHex32(chatId)) {
+        log("请先准备或填写 32 位 chat_id");
+        return;
+      }
+      const params = new URLSearchParams({chat_id: chatId});
+      if (lastCommentId) {
+        if (!isHex32(lastCommentId)) {
+          log("last_comment_id 必须是 32 位 hex");
+          return;
+        }
+        params.set("last_comment_id", lastCommentId);
+      }
+      try {
+        const result = await requestJson(`/api/chat/load?${params.toString()}`);
+        if (result.data === "none") {
+          renderEmpty();
+          log("没有找到 chat 数据");
+          return;
+        }
+        updateChatMeta(result.data);
+        renderedIds = new Set();
+        messages.innerHTML = "";
+        const comments = result.data.comments || [];
+        if (!comments.some(isCommentFromToday)) {
+          renderDailyGreeting();
+        }
+        if (!comments.length) {
+          messages.insertAdjacentHTML("beforeend", `<div class="empty">暂无消息。发送一条，看看链式 block 如何开始。</div>`);
+        } else {
+          comments.forEach((comment) => renderComment(comment));
+        }
+        log(`加载 ${comments.length} 条消息`);
+      } catch (error) {
+        log(error.message);
+      }
+    }
+
+    function closeWs() {
+      if (socket) {
+        socket.close();
+        socket = null;
+      }
+    }
+
+    function connectWs() {
+      const chatId = chatIdInput.value.trim();
+      if (!isHex32(chatId)) {
+        log("请先准备或填写 32 位 chat_id");
+        return;
+      }
+      closeWs();
+      const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+      socket = new WebSocket(`${protocol}//${location.host}/api/ws?block_id=${encodeURIComponent(chatId)}`);
+      setBadge(wsBadge, "连接中");
+      socket.addEventListener("open", () => {
+        setBadge(wsBadge, "已连接", "ok");
+        log("WebSocket 已连接");
+      });
+      socket.addEventListener("message", (event) => {
+        const data = JSON.parse(event.data);
+        if (data.type === "ws.open") {
+          return;
+        }
+        if (data.type === "chat.submit") {
+          updateChatMeta(data);
+          renderComment(data.comment, true);
+          log(`收到转发：${data.comment.comment_id}`);
+        }
+      });
+      socket.addEventListener("close", () => {
+        setBadge(wsBadge, "已断开");
+      });
+      socket.addEventListener("error", () => {
+        setBadge(wsBadge, "连接错误", "error");
+      });
+    }
+
+    async function sendMessage() {
+      const chatId = chatIdInput.value.trim();
+      const content = contentInput.value.trim();
+      if (!isHex32(chatId)) {
+        log("请先准备或填写 32 位 chat_id");
+        return;
+      }
+      if (!content) {
+        contentInput.focus();
+        return;
+      }
+      const uuid = crypto.randomUUID().replaceAll("-", "");
+      sendButton.disabled = true;
+      try {
+        const data = await requestJson("/api/chat/submit", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            chat_id: chatId,
+            uuid,
+            content,
+            ws_block_ids: [],
+          }),
+        });
+        updateChatMeta(data);
+        renderComment(data.comment);
+        if (data.assistant && data.assistant.comment) {
+          updateChatMeta(data.assistant);
+          renderComment(data.assistant.comment);
+        }
+        contentInput.value = "";
+        log(`已发送：${uuid}`);
+      } catch (error) {
+        log(error.message);
+      } finally {
+        sendButton.disabled = false;
+      }
+    }
+
+    [userIdInput, chatIdInput, lastCommentInput].forEach((input) => {
+      input.addEventListener("input", () => sanitizeHexInput(input));
+    });
+
+    checkLoginButton.addEventListener("click", checkLogin);
+    openLoginButton.addEventListener("click", () => {
+      location.href = "/login";
+    });
+    ensureButton.addEventListener("click", ensureChat);
+    loadButton.addEventListener("click", loadChat);
+    connectButton.addEventListener("click", connectWs);
+    createPromptButton.addEventListener("click", createPrompt);
+    loadPromptsButton.addEventListener("click", loadPrompts);
+    createKnowledgeButton.addEventListener("click", createKnowledge);
+    loadKnowledgeButton.addEventListener("click", loadKnowledge);
+    searchKnowledgeButton.addEventListener("click", searchKnowledge);
+    sendButton.addEventListener("click", sendMessage);
+    contentInput.addEventListener("keydown", (event) => {
+      if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+        sendMessage();
+      }
+    });
+
+    checkLogin().then((data) => {
+      loadKnowledge();
+      if (data && data.logged_in) {
+        ensureChat();
+      } else {
+        renderEmpty();
+      }
+    });
+  </script>
+</body>
+</html>

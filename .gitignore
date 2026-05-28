@@ -1,0 +1,22 @@
+.DS_Store
+.env
+.env.*
+!.env.example
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+*.log
+
+# Xcode
+DerivedData/
+*.xcuserstate
+*.xcuserdata/
+xcuserdata/
+*.moved-aside
+*.xcscmblueprint
+
+# Local tooling
+.claude/
+.git-backup/

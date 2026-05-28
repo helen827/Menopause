@@ -1,0 +1,10 @@
+import SwiftUI
+
+@main
+struct menopause_xiaApp: App {
+    var body: some Scene {
+        WindowGroup {
+            LoginView()
+        }
+    }
+}
