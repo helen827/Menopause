@@ -138,6 +138,38 @@ CREATE TABLE IF NOT EXISTS helen.chat_blocks (
   KEY idx_chat_blocks_chat_id_end_comment (chat_id, end_comment_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS helen.trend_report_blocks (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  user_entity_id CHAR(32) NOT NULL,
+  block_id CHAR(32) NOT NULL,
+  createtime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updatetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_trend_report_user_entity_id (user_entity_id),
+  UNIQUE KEY uq_trend_report_block_id (block_id),
+  KEY idx_trend_report_updatetime (updatetime)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS helen.meditation_practice_records (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  practice_id CHAR(32) NOT NULL,
+  user_entity_id CHAR(32) NOT NULL,
+  mode_key VARCHAR(32) NOT NULL,
+  mode_label VARCHAR(64) NOT NULL,
+  started_at_utc DATETIME NOT NULL,
+  ended_at_utc DATETIME DEFAULT NULL,
+  duration_seconds INT UNSIGNED NOT NULL DEFAULT 0,
+  cycle_count INT UNSIGNED NOT NULL DEFAULT 0,
+  completed TINYINT(1) NOT NULL DEFAULT 1,
+  source VARCHAR(64) DEFAULT NULL,
+  createtime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updatetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_meditation_practice_id (practice_id),
+  KEY idx_meditation_user_started (user_entity_id, started_at_utc),
+  KEY idx_meditation_user_mode_started (user_entity_id, mode_key, started_at_utc)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS helen.knowledge_items (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   knowledge_id CHAR(32) NOT NULL,
@@ -152,6 +184,18 @@ CREATE TABLE IF NOT EXISTS helen.knowledge_items (
   UNIQUE KEY uq_knowledge_items_knowledge_id (knowledge_id),
   KEY idx_knowledge_items_active_time (is_active, updatetime),
   KEY idx_knowledge_items_category (category)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS helen.app_blocks (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  block_key VARCHAR(128) NOT NULL,
+  block_id CHAR(32) NOT NULL,
+  title VARCHAR(255) DEFAULT NULL,
+  createtime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updatetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_app_blocks_block_key (block_key),
+  UNIQUE KEY uq_app_blocks_block_id (block_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS helen1.entities (

@@ -15,9 +15,19 @@ class DeepSeekService:
         self.model = settings.deepseek_model
         self.max_tokens = settings.deepseek_max_tokens
 
-    async def complete(self, messages):
+    async def complete(self, messages, *, max_tokens=None, temperature=0.7, response_format=None):
         if not self.api_key:
             raise DeepSeekError("DEEPSEEK_API_KEY is not configured")
+
+        payload = {
+            "model": self.model,
+            "messages": messages,
+            "max_tokens": max_tokens or self.max_tokens,
+            "temperature": temperature,
+            "stream": False,
+        }
+        if response_format is not None:
+            payload["response_format"] = response_format
 
         request = HTTPRequest(
             url=f"{self.base_url}/chat/completions",
@@ -26,16 +36,7 @@ class DeepSeekService:
                 "Authorization": f"Bearer {self.api_key}",
                 "Content-Type": "application/json",
             },
-            body=json.dumps(
-                {
-                    "model": self.model,
-                    "messages": messages,
-                    "max_tokens": self.max_tokens,
-                    "temperature": 0.7,
-                    "stream": False,
-                },
-                ensure_ascii=False,
-            ).encode("utf-8"),
+            body=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
             ca_certs=certifi.where(),
             request_timeout=60,
         )

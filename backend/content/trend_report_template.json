@@ -1,0 +1,286 @@
+{
+  "template_name": "trend_report",
+  "template_version": "v1",
+  "description": "由用户与AI聊天内容分析生成的身体变化趋势报告数据模板，用于存储和客户端渲染。",
+  "source": {
+    "type": "ai_chat_analysis",
+    "chat_id": "",
+    "user_entity_id": "",
+    "anchor": {
+      "type": "latest_ai_chat_date",
+      "latest_ai_chat_time": "",
+      "latest_ai_chat_date": "",
+      "timezone": "Asia/Shanghai",
+      "description": "7天、30天、90天均以用户最近一次和AI对话的日期作为结束日期倒推，而不是以当前自然日期倒推。"
+    },
+    "message_range": {
+      "start_time": "",
+      "end_time": "",
+      "timezone": "Asia/Shanghai",
+      "included_user_message_count": 0,
+      "included_assistant_message_count": 0
+    },
+    "analysis_note": "仅基于用户主动提到的身体、情绪、睡眠、饮食、运动、用药、冥想练习等聊天内容生成；无法替代医生诊断。"
+  },
+  "report": {
+    "report_id": "",
+    "title": "本周身体变化趋势",
+    "period": {
+      "active_range": "30d",
+      "anchor_date": "",
+      "anchor_source": "latest_ai_chat_date",
+      "available_ranges": [
+        {
+          "label": "7天",
+          "value": "7d"
+        },
+        {
+          "label": "30天",
+          "value": "30d"
+        },
+        {
+          "label": "90天",
+          "value": "90d"
+        }
+      ],
+      "start_date": "",
+      "end_date": "",
+      "range_rule": "end_date 等于 source.anchor.latest_ai_chat_date；start_date 根据 active_range 从 end_date 向前倒推，7d 包含 end_date 当天共 7 天，30d 共 30 天，90d 共 90 天。",
+      "recorded_days": 0,
+      "total_days": 0
+    },
+    "overview": {
+      "icon": "chart.xyaxis.line",
+      "title": "本周概况",
+      "summary": "过去7天，你记录了5天。最常出现的症状是睡眠差和焦虑。",
+      "highlight_symptom_keys": [],
+      "confidence": "medium"
+    },
+    "frequent_symptoms": {
+      "title": "高频症状",
+      "items": [
+        {
+          "key": "poor_sleep",
+          "label": "睡眠差",
+          "icon": "moon.fill",
+          "count": 5,
+          "unit": "次",
+          "severity": "medium",
+          "evidence_comment_ids": []
+        },
+        {
+          "key": "anxiety",
+          "label": "焦虑",
+          "icon": "bolt.fill",
+          "count": 4,
+          "unit": "次",
+          "severity": "medium",
+          "evidence_comment_ids": []
+        },
+        {
+          "key": "hot_flash",
+          "label": "潮热",
+          "icon": "flame.fill",
+          "count": 2,
+          "unit": "次",
+          "severity": "low",
+          "evidence_comment_ids": []
+        },
+        {
+          "key": "fatigue",
+          "label": "疲惫",
+          "icon": "xmark.circle.fill",
+          "count": 3,
+          "unit": "次",
+          "severity": "medium",
+          "evidence_comment_ids": []
+        }
+      ]
+    },
+    "trend_cards": [
+      {
+        "key": "sleep_trend",
+        "title": "睡眠趋势",
+        "chart_type": "weekly_bar",
+        "description": "柱状图表示睡眠问题严重程度",
+        "metric": {
+          "key": "sleep_problem_severity",
+          "label": "睡眠问题严重程度",
+          "min": 0,
+          "max": 5,
+          "unit": "分"
+        },
+        "data_points": [
+          {
+            "label": "一",
+            "date": "",
+            "value": 1,
+            "evidence_comment_ids": []
+          },
+          {
+            "label": "二",
+            "date": "",
+            "value": 3,
+            "evidence_comment_ids": []
+          },
+          {
+            "label": "三",
+            "date": "",
+            "value": 4,
+            "evidence_comment_ids": []
+          },
+          {
+            "label": "四",
+            "date": "",
+            "value": 2,
+            "evidence_comment_ids": []
+          },
+          {
+            "label": "五",
+            "date": "",
+            "value": 3,
+            "evidence_comment_ids": []
+          },
+          {
+            "label": "六",
+            "date": "",
+            "value": 5,
+            "evidence_comment_ids": []
+          },
+          {
+            "label": "日",
+            "date": "",
+            "value": 1,
+            "evidence_comment_ids": []
+          }
+        ]
+      }
+    ],
+    "possible_triggers": {
+      "title": "可能触发因素",
+      "items": [
+        {
+          "type": "insight",
+          "icon": "lightbulb.fill",
+          "style": "warning",
+          "text": "过去7天，你有3次潮热发生在熬夜后的第二天。睡眠不足可能是你的潮热触发因素之一。",
+          "related_symptom_keys": [
+            "hot_flash",
+            "poor_sleep"
+          ],
+          "evidence_comment_ids": [],
+          "confidence": "medium"
+        },
+        {
+          "type": "observation",
+          "icon": "info",
+          "style": "info",
+          "text": "你在饮用咖啡后记录潮热的次数较多（4次），可以继续观察这个关联。",
+          "related_symptom_keys": [
+            "hot_flash"
+          ],
+          "evidence_comment_ids": [],
+          "confidence": "low"
+        }
+      ]
+    },
+    "recommended_next_steps": {
+      "title": "推荐下一步",
+      "items": [
+        {
+          "key": "body_scan_before_sleep",
+          "title": "尝试睡前身体扫描",
+          "desc": "帮助改善睡眠质量",
+          "icon": "moon.fill",
+          "action": {
+            "type": "open_meditation",
+            "payload": {
+              "practice_id": ""
+            }
+          }
+        },
+        {
+          "key": "reduce_caffeine",
+          "title": "减少咖啡因摄入",
+          "desc": "观察是否减少潮热",
+          "icon": "cup.and.saucer.fill",
+          "action": {
+            "type": "open_record_reminder",
+            "payload": {
+              "reminder_type": "caffeine"
+            }
+          }
+        }
+      ]
+    },
+    "medical_checklist": {
+      "button_title": "生成就医清单",
+      "icon": "cross.case.fill",
+      "action": {
+        "type": "generate_medical_checklist",
+        "payload": {
+          "report_id": ""
+        }
+      }
+    },
+    "disclaimer": "趋势报告用于自我观察和就医沟通准备，不作为医学诊断或治疗建议。"
+  },
+  "prompt_generation_contract": {
+    "task": "请根据用户最近一次和AI对话日期作为锚点，倒推指定时间范围内的AI聊天记录，生成符合 report 字段结构的趋势报告 JSON。",
+    "input_requirements": [
+      "7天、30天、90天的结束日期必须是用户最近一次和AI对话的日期，不要使用今天作为默认结束日期。",
+      "active_range=7d 时，统计 latest_ai_chat_date 当天及之前共7天；30d 和90d 同理。",
+      "只分析用户自己提到的内容，不把AI建议误判为用户实际症状。",
+      "每个症状、触发因素、趋势数值都尽量引用 evidence_comment_ids。",
+      "如果证据不足，count 使用 0 或低数值，confidence 设置为 low。",
+      "不要编造医学诊断、药物疗效或不存在的检查结果。",
+      "输出必须是合法 JSON，不要输出 Markdown。"
+    ],
+    "symptom_key_reference": [
+      {
+        "key": "poor_sleep",
+        "label": "睡眠差"
+      },
+      {
+        "key": "anxiety",
+        "label": "焦虑"
+      },
+      {
+        "key": "hot_flash",
+        "label": "潮热"
+      },
+      {
+        "key": "fatigue",
+        "label": "疲惫"
+      },
+      {
+        "key": "brain_fog",
+        "label": "脑雾"
+      },
+      {
+        "key": "night_sweat",
+        "label": "夜汗"
+      },
+      {
+        "key": "urinary_leakage",
+        "label": "漏尿"
+      },
+      {
+        "key": "mood_swing",
+        "label": "情绪波动"
+      }
+    ],
+    "severity_scale": {
+      "min": 0,
+      "max": 5,
+      "meaning": {
+        "0": "没有提到或无明显问题",
+        "1": "轻微",
+        "2": "较轻",
+        "3": "中等",
+        "4": "较重",
+        "5": "严重或明显影响生活"
+      }
+    }
+  }
+}

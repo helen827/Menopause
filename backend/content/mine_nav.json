@@ -1,0 +1,40 @@
+{
+  "items": [
+    {
+      "title": "我的趋势报告",
+      "desc": "",
+      "icon": "chart.xyaxis.line",
+      "route": "trend_report"
+    },
+    {
+      "title": "就医清单",
+      "desc": "",
+      "icon": "cross.case.fill",
+      "route": "medical_checklist"
+    },
+    {
+      "title": "收藏内容",
+      "desc": "",
+      "icon": "bookmark.fill",
+      "route": "favorites"
+    },
+    {
+      "title": "记录历史",
+      "desc": "",
+      "icon": "clock.arrow.circlepath",
+      "route": "record_history"
+    },
+    {
+      "title": "记录提醒",
+      "desc": "每日 21:00",
+      "icon": "bell.fill",
+      "route": "record_reminder"
+    },
+    {
+      "title": "数据与隐私",
+      "desc": "查看隐私政策",
+      "icon": "shield.lefthalf.filled",
+      "route": "privacy"
+    }
+  ]
+}

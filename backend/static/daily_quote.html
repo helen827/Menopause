@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>每日一言管理</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f2f5;
+      --panel: #fffdfd;
+      --ink: #2d292b;
+      --muted: #776970;
+      --line: #e5d8df;
+      --accent: #9d7489;
+      --button: #2f292d;
+      --ok: #19784d;
+      --danger: #b42318;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(247, 242, 245, 0.96)),
+        var(--bg);
+    }
+
+    main {
+      width: min(920px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 40px;
+      display: grid;
+      gap: 18px;
+    }
+
+    header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 8px 2px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 28px;
+      line-height: 1.15;
+      font-weight: 900;
+      letter-spacing: 0;
+    }
+
+    header p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 650;
+    }
+
+    a {
+      color: #5f5059;
+      font-size: 13px;
+      font-weight: 820;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 20px;
+      box-shadow: 0 16px 42px rgba(93, 69, 82, 0.08);
+    }
+
+    label {
+      display: block;
+      margin: 0 0 8px;
+      color: #695a63;
+      font-size: 12px;
+      font-weight: 840;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink);
+      outline: none;
+      font: inherit;
+      font-weight: 650;
+    }
+
+    input {
+      height: 44px;
+      padding: 0 12px;
+    }
+
+    textarea {
+      min-height: 170px;
+      padding: 12px;
+      resize: vertical;
+      line-height: 1.55;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(157, 116, 137, 0.14);
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .switch-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 16px;
+      color: #695a63;
+      font-size: 13px;
+      font-weight: 820;
+    }
+
+    .switch-row input {
+      width: 18px;
+      height: 18px;
+      padding: 0;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    button {
+      height: 44px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: #5f5059;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 850;
+      cursor: pointer;
+    }
+
+    button.primary {
+      border-color: var(--button);
+      background: var(--button);
+      color: #fff;
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .quote-card {
+      display: grid;
+      gap: 14px;
+      min-height: 230px;
+    }
+
+    .quote-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      color: #665760;
+      font-size: 14px;
+      font-weight: 850;
+    }
+
+    .quote-source {
+      color: #8a7a82;
+      font-size: 13px;
+      text-align: right;
+    }
+
+    .quote-text {
+      margin: 0;
+      font-size: 25px;
+      line-height: 1.5;
+      font-weight: 900;
+      letter-spacing: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .speaker {
+      color: #6e6268;
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    .quote-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .list-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbf7f9;
+      padding: 14px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 156px;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .list-card strong {
+      display: block;
+      color: #332d30;
+      font-size: 15px;
+      line-height: 1.45;
+      word-break: break-word;
+    }
+
+    .list-card p {
+      margin: 8px 0 4px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 720;
+    }
+
+    .list-card span {
+      color: #6e6268;
+      font-size: 13px;
+      font-weight: 780;
+    }
+
+    .list-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .list-actions button {
+      height: 36px;
+    }
+
+    .meta,
+    .status {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+      word-break: break-all;
+      white-space: pre-wrap;
+    }
+
+    .status.ok {
+      color: var(--ok);
+    }
+
+    .status.error {
+      color: var(--danger);
+    }
+
+    @media (max-width: 780px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .list-card {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>每日一言管理</h1>
+        <p>可以不断新增每日一言；客户端每次加载会随机拿到一条。</p>
+      </div>
+      <a href="/chat">返回 Chat 测试页</a>
+    </header>
+
+    <section class="grid">
+      <form id="quoteForm" class="panel">
+        <div class="field">
+          <label for="quoteInput">quote</label>
+          <textarea id="quoteInput" placeholder="输入每日一言正文"></textarea>
+        </div>
+        <div class="field">
+          <label for="sourceInput">source</label>
+          <input id="sourceInput" placeholder="例如：《更年期不是忍忍就好》">
+        </div>
+        <div class="field">
+          <label for="speakerInput">speaker</label>
+          <input id="speakerInput" placeholder="例如：辛西娅・尼克松">
+        </div>
+        <label class="switch-row">
+          <input id="citationEnabledInput" type="checkbox">
+          App 上允许出处和作者跳转至引证页面
+        </label>
+        <div class="field">
+          <label for="sourceUrlInput">source_url</label>
+          <input id="sourceUrlInput" placeholder="出处引证地址，例如：https://example.com/book">
+        </div>
+        <div class="field">
+          <label for="speakerUrlInput">speaker_url</label>
+          <input id="speakerUrlInput" placeholder="作者引证地址，例如：https://example.com/author">
+        </div>
+        <div class="actions">
+          <button id="saveButton" class="primary" type="submit">新增</button>
+          <button id="reloadButton" type="button">重新读取</button>
+        </div>
+        <input id="editIndexInput" type="hidden">
+        <p id="status" class="status"></p>
+      </form>
+
+      <aside class="panel quote-card">
+        <div class="quote-top">
+          <span>每日一言</span>
+          <span id="previewSource" class="quote-source"></span>
+        </div>
+        <p id="previewQuote" class="quote-text"></p>
+        <div id="previewSpeaker" class="speaker"></div>
+        <div id="meta" class="meta"></div>
+      </aside>
+    </section>
+
+    <section class="panel">
+      <div class="quote-top">
+        <span>全部每日一言</span>
+        <span id="countMeta" class="quote-source">0 条</span>
+      </div>
+      <div id="quoteList" class="quote-list"></div>
+    </section>
+  </main>
+
+  <script>
+    const form = document.querySelector("#quoteForm");
+    const quoteInput = document.querySelector("#quoteInput");
+    const sourceInput = document.querySelector("#sourceInput");
+    const speakerInput = document.querySelector("#speakerInput");
+    const citationEnabledInput = document.querySelector("#citationEnabledInput");
+    const sourceUrlInput = document.querySelector("#sourceUrlInput");
+    const speakerUrlInput = document.querySelector("#speakerUrlInput");
+    const editIndexInput = document.querySelector("#editIndexInput");
+    const saveButton = document.querySelector("#saveButton");
+    const reloadButton = document.querySelector("#reloadButton");
+    const statusBox = document.querySelector("#status");
+    const previewQuote = document.querySelector("#previewQuote");
+    const previewSource = document.querySelector("#previewSource");
+    const previewSpeaker = document.querySelector("#previewSpeaker");
+    const meta = document.querySelector("#meta");
+    const quoteList = document.querySelector("#quoteList");
+    const countMeta = document.querySelector("#countMeta");
+
+    function setStatus(message, type = "") {
+      statusBox.className = `status ${type}`.trim();
+      statusBox.textContent = message;
+    }
+
+    async function requestJson(url, options = {}) {
+      const response = await fetch(url, {
+        credentials: "same-origin",
+        ...options,
+        headers: {
+          ...(options.headers || {}),
+        },
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || `请求失败：${response.status}`);
+      }
+      return data;
+    }
+
+    function renderPreview(data) {
+      const quote = quoteInput.value.trim() || data?.quote || "";
+      const source = sourceInput.value.trim() || data?.source || "";
+      const speaker = speakerInput.value.trim() || data?.speaker || "";
+      const citationEnabled = citationEnabledInput.checked || data?.citation_enabled || false;
+      previewQuote.textContent = quote ? `“${quote}”` : "“”";
+      previewSource.textContent = source ? `出处 ${source}${citationEnabled ? " ↗" : ""}` : "";
+      previewSpeaker.textContent = speaker ? `—— ${speaker}${citationEnabled ? " ↗" : ""}` : "";
+    }
+
+    function clearForm() {
+      quoteInput.value = "";
+      sourceInput.value = "";
+      speakerInput.value = "";
+      citationEnabledInput.checked = false;
+      sourceUrlInput.value = "";
+      speakerUrlInput.value = "";
+      editIndexInput.value = "";
+      saveButton.textContent = "新增";
+      renderPreview();
+    }
+
+    function fillFormFromQuote(data, index = "") {
+      quoteInput.value = data.quote || "";
+      sourceInput.value = data.source || "";
+      speakerInput.value = data.speaker || "";
+      citationEnabledInput.checked = !!data.citation_enabled;
+      sourceUrlInput.value = data.source_url || "";
+      speakerUrlInput.value = data.speaker_url || "";
+      editIndexInput.value = index;
+      saveButton.textContent = index === "" ? "新增" : "更新";
+      renderPreview(data);
+    }
+
+    function fillForm(block) {
+      const data = block.data || {};
+      if (editIndexInput.value === "") {
+        quoteInput.value = "";
+        sourceInput.value = "";
+        speakerInput.value = "";
+        saveButton.textContent = "新增";
+        renderPreview(data);
+      }
+      meta.textContent = [
+        `block_key: ${block.block_key || "daily_quote"}`,
+        `block_id: ${block.block_id || "none"}`,
+        `count: ${block.count || 0}`,
+        `json: ${block.json_file || "none"}`,
+      ].join("\\n");
+      renderQuoteList(block.quotes || []);
+    }
+
+    function renderQuoteList(quotes) {
+      countMeta.textContent = `${quotes.length} 条`;
+      if (!quotes.length) {
+        quoteList.innerHTML = `<p class="status">暂无内容。</p>`;
+        return;
+      }
+      quoteList.innerHTML = "";
+      quotes.forEach((item, index) => {
+        const card = document.createElement("article");
+        card.className = "list-card";
+        card.innerHTML = `
+          <div>
+            <strong></strong>
+            <p></p>
+            <span></span>
+          </div>
+          <div class="list-actions">
+            <button type="button" data-action="edit">编辑</button>
+            <button type="button" data-action="delete">删除</button>
+          </div>
+        `;
+        card.querySelector("strong").textContent = `#${index + 1} “${item.quote || ""}”`;
+        card.querySelector("p").textContent = item.source ? `出处 ${item.source}${item.citation_enabled ? " · 可跳转" : ""}` : "未填写出处";
+        card.querySelector("span").textContent = [
+          item.speaker ? `—— ${item.speaker}` : "",
+          item.source_url ? `source_url: ${item.source_url}` : "",
+          item.speaker_url ? `speaker_url: ${item.speaker_url}` : "",
+        ].filter(Boolean).join(" · ");
+        card.querySelector('[data-action="edit"]').addEventListener("click", () => {
+          fillFormFromQuote(item, String(index));
+          quoteInput.focus();
+          setStatus(`正在编辑第 ${index + 1} 条`);
+        });
+        card.querySelector('[data-action="delete"]').addEventListener("click", () => deleteQuote(index));
+        quoteList.appendChild(card);
+      });
+    }
+
+    async function loadQuote() {
+      setStatus("正在读取...");
+      try {
+        const block = await requestJson("/api/app/daily_quote?manage=1");
+        fillForm(block);
+        setStatus("已读取每日一言列表", "ok");
+      } catch (error) {
+        setStatus(error.message, "error");
+      }
+    }
+
+    async function saveQuote(event) {
+      event.preventDefault();
+      const quote = quoteInput.value.trim();
+      const source = sourceInput.value.trim();
+      const speaker = speakerInput.value.trim();
+      const sourceUrl = sourceUrlInput.value.trim();
+      const speakerUrl = speakerUrlInput.value.trim();
+      const citationEnabled = citationEnabledInput.checked;
+      const index = editIndexInput.value.trim();
+      if (!quote) {
+        quoteInput.focus();
+        setStatus("quote 不能为空", "error");
+        return;
+      }
+      saveButton.disabled = true;
+      setStatus("正在保存...");
+      try {
+        const block = await requestJson("/api/app/daily_quote", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            action: index === "" ? "add" : "update",
+            index,
+            quote,
+            source,
+            speaker,
+            source_url: sourceUrl,
+            speaker_url: speakerUrl,
+            citation_enabled: citationEnabled,
+          }),
+        });
+        fillForm(block);
+        clearForm();
+        await loadQuote();
+        setStatus(index === "" ? "新增成功" : "更新成功", "ok");
+      } catch (error) {
+        setStatus(error.message, "error");
+      } finally {
+        saveButton.disabled = false;
+      }
+    }
+
+    async function deleteQuote(index) {
+      if (!confirm(`确定删除第 ${index + 1} 条每日一言吗？`)) {
+        return;
+      }
+      try {
+        await requestJson("/api/app/daily_quote", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({action: "delete", index}),
+        });
+        await loadQuote();
+        setStatus("删除成功", "ok");
+      } catch (error) {
+        setStatus(error.message, "error");
+      }
+    }
+
+    [quoteInput, sourceInput, speakerInput, sourceUrlInput, speakerUrlInput].forEach((input) => {
+      input.addEventListener("input", () => renderPreview());
+    });
+    citationEnabledInput.addEventListener("change", () => renderPreview());
+    form.addEventListener("submit", saveQuote);
+    reloadButton.addEventListener("click", loadQuote);
+    loadQuote();
+  </script>
+</body>
+</html>

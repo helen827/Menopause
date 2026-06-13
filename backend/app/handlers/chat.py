@@ -14,6 +14,7 @@ from app.services.chat import (
     create_chat_prompt,
     ensure_chat,
     list_chat_prompts,
+    load_chat_activity,
     load_chat_comments,
     now_iso,
     select_chat_prompt,
@@ -21,6 +22,7 @@ from app.services.chat import (
 )
 from app.services.deepseek import DeepSeekError, DeepSeekService
 from app.services.knowledge import build_knowledge_system_message, search_knowledge
+from app.services.trend_report import refresh_trend_report_for_chat
 
 
 HEX32_RE = re.compile(r"^[0-9a-fA-F]{32}$")
@@ -101,6 +103,27 @@ class ChatLoadHandler(ChatBaseHandler):
         self.write_json({"data": data if data else "none"})
 
 
+class ChatActivityHandler(ChatBaseHandler):
+    async def get(self):
+        user_entity_id = self.current_user_entity_id()
+        try:
+            year = int(self.get_argument("year", ""))
+            month = int(self.get_argument("month", ""))
+            tz_offset_minutes = int(self.get_argument("tz_offset_minutes", "0"))
+        except ValueError as exc:
+            raise tornado.web.HTTPError(400, reason="year, month and tz_offset_minutes must be integers") from exc
+
+        if year < 2000 or year > 2100:
+            raise tornado.web.HTTPError(400, reason="year is out of range")
+        if month < 1 or month > 12:
+            raise tornado.web.HTTPError(400, reason="month must be 1-12")
+
+        async with self.mysql.acquire() as conn:
+            async with conn.cursor() as cur:
+                data = await load_chat_activity(cur, user_entity_id, year, month, tz_offset_minutes)
+        self.write_json({"data": data})
+
+
 class ChatSubmitHandler(ChatBaseHandler):
     async def post(self):
         chat_id = str(self._param("chat_id", "")).strip().lower()
@@ -121,6 +144,10 @@ class ChatSubmitHandler(ChatBaseHandler):
             ask_ai = ask_ai.lower() not in ("0", "false", "no")
         else:
             ask_ai = bool(ask_ai)
+        try:
+            tz_offset_minutes = int(self._param("tz_offset_minutes", 480))
+        except (TypeError, ValueError) as exc:
+            raise tornado.web.HTTPError(400, reason="tz_offset_minutes must be an integer") from exc
 
         comment = {
             "comment_id": comment_id,
@@ -130,11 +157,18 @@ class ChatSubmitHandler(ChatBaseHandler):
             "createtime": now_iso(),
         }
 
+        trend_report = None
         async with self.mysql.acquire() as conn:
             async with conn.cursor() as cur:
                 await cur.execute("START TRANSACTION")
                 try:
                     result = await append_chat_comment(cur, chat_id, comment)
+                    trend_report = await refresh_trend_report_for_chat(
+                        cur,
+                        chat_id,
+                        tz_offset_minutes,
+                        deepseek_service=self.deepseek_service if ask_ai else None,
+                    )
                     await cur.execute("COMMIT")
                 except ValueError as exc:
                     await cur.execute("ROLLBACK")
@@ -167,7 +201,15 @@ class ChatSubmitHandler(ChatBaseHandler):
             try:
                 deepseek = await self.deepseek_service.complete(context["messages"])
             except DeepSeekError as exc:
-                self.write_json({"success": True, "ai_success": False, "ai_error": str(exc), **result})
+                self.write_json(
+                    {
+                        "success": True,
+                        "ai_success": False,
+                        "ai_error": str(exc),
+                        "trend_report": trend_report,
+                        **result,
+                    }
+                )
                 return
 
             assistant_comment = {
@@ -188,6 +230,12 @@ class ChatSubmitHandler(ChatBaseHandler):
                     await cur.execute("START TRANSACTION")
                     try:
                         assistant_result = await append_chat_comment(cur, chat_id, assistant_comment)
+                        trend_report = await refresh_trend_report_for_chat(
+                            cur,
+                            chat_id,
+                            tz_offset_minutes,
+                            deepseek_service=self.deepseek_service,
+                        )
                         await cur.execute("COMMIT")
                     except Exception:
                         await cur.execute("ROLLBACK")
@@ -200,6 +248,7 @@ class ChatSubmitHandler(ChatBaseHandler):
                 "ai_success": assistant_result is not None,
                 "assistant": assistant_result,
                 "deepseek": deepseek,
+                "trend_report": trend_report,
                 **result,
             }
         )

@@ -1,0 +1,28 @@
+{
+  "quotes": [
+    {
+      "quote": "test",
+      "source": "test",
+      "speaker": "test",
+      "source_url": "",
+      "speaker_url": "",
+      "citation_enabled": false
+    },
+    {
+      "quote": "更年期是一个充满机会的阶段，就仿佛是第二个青春期",
+      "source": "《更年期不是忍忍就好》",
+      "speaker": "辛西娅·尼克松",
+      "source_url": "https://book.douban.com/subject/37182810/",
+      "speaker_url": "https://www.douban.com/personage/37183011/",
+      "citation_enabled": true
+    },
+    {
+      "quote": "测试",
+      "source": "测试",
+      "speaker": "测试",
+      "source_url": "",
+      "speaker_url": "",
+      "citation_enabled": false
+    }
+  ]
+}

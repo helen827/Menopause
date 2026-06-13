@@ -6,9 +6,37 @@
 //
 
 import SwiftUI
+import UserNotifications
+
+final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
+    func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
+    ) -> Bool {
+        ReminderNotificationManager.configureDelegate(self)
+        Task {
+            let status = await ReminderNotificationManager.authorizationStatus()
+            guard status == .authorized || status == .provisional || status == .ephemeral else {
+                return
+            }
+            let settings = ReminderSettingsStore.load()
+            try? await ReminderNotificationManager.syncAll(settings: settings)
+        }
+        return true
+    }
+
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification
+    ) async -> UNNotificationPresentationOptions {
+        [.banner, .sound, .badge, .list]
+    }
+}
 
 @main
 struct menocalmxiaApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+
     var body: some Scene {
         WindowGroup {
             ContentView()

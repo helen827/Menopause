@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from app.services.entities import get_entity_body, put_entity_body
 
@@ -282,6 +282,114 @@ async def load_recent_chat_comments(cur, chat_id, limit=40):
         "total_comments": int(chat[1]),
         "comments": comments[-limit:],
     }
+
+
+def _parse_comment_time(value):
+    if not value:
+        return None
+    if isinstance(value, datetime):
+        return value
+    text = str(value).strip()
+    if text.endswith("Z"):
+        text = f"{text[:-1]}+00:00"
+    try:
+        return datetime.fromisoformat(text)
+    except ValueError:
+        return None
+
+
+async def load_chat_activity(cur, user_entity_id, year, month, tz_offset_minutes=0):
+    from app.services.meditation import load_meditation_activity
+
+    meditation_activity = await load_meditation_activity(cur, user_entity_id, year, month, tz_offset_minutes)
+    await cur.execute(
+        """
+        SELECT chat_id
+        FROM helen.chat_index
+        WHERE user_entity_id = %s
+        """,
+        (user_entity_id,),
+    )
+    chats = await cur.fetchall()
+    if not chats:
+        return {
+            "year": year,
+            "month": month,
+            "scope_title": "本月",
+            "checkin_days": [],
+            "meditation_days": meditation_activity["practice_days"],
+            "consecutive_days": meditation_activity["practice_streak"],
+            "practice_count": meditation_activity["practice_count"],
+            "tags": _meditation_tags(meditation_activity),
+        }
+
+    offset = timezone(timedelta(minutes=int(tz_offset_minutes or 0)))
+    checkin_days = set()
+    all_checkin_dates = set()
+
+    for (chat_id,) in chats:
+        await cur.execute(
+            """
+            SELECT block_id
+            FROM helen.chat_blocks
+            WHERE chat_id = %s
+            ORDER BY id ASC
+            """,
+            (chat_id,),
+        )
+        blocks = await cur.fetchall()
+        for (block_id,) in blocks:
+            block_body = await get_entity_body(cur, block_id)
+            if not block_body:
+                continue
+            for comment in block_body.get("comments", []):
+                if comment.get("role") != "user":
+                    continue
+                created_at = _parse_comment_time(comment.get("createtime"))
+                if not created_at:
+                    continue
+                if created_at.tzinfo is None:
+                    created_at = created_at.replace(tzinfo=timezone.utc)
+                local_date = created_at.astimezone(offset).date()
+                all_checkin_dates.add(local_date)
+                if local_date.year == year and local_date.month == month:
+                    checkin_days.add(local_date.day)
+
+    today = datetime.now(offset).date()
+    streak = 0
+    cursor = today
+    while cursor in all_checkin_dates:
+        streak += 1
+        cursor -= timedelta(days=1)
+
+    return {
+        "year": year,
+        "month": month,
+        "scope_title": "本月",
+        "checkin_days": sorted(checkin_days),
+        "meditation_days": meditation_activity["practice_days"],
+        "consecutive_days": max(streak, meditation_activity["practice_streak"]),
+        "practice_count": meditation_activity["practice_count"],
+        "tags": _meditation_tags(meditation_activity),
+    }
+
+
+def _meditation_tags(activity):
+    tags = []
+    mode_counts = activity.get("mode_counts") or {}
+    mode_labels = {
+        "mood": "舒缓心情",
+        "sleep": "助眠安睡",
+        "hot_flash": "缓解潮热",
+    }
+    for key, label in mode_labels.items():
+        count = int(mode_counts.get(key) or 0)
+        if count > 0:
+            tags.append(f"{label} {count}次")
+    total_minutes = int((activity.get("total_duration_seconds") or 0) / 60)
+    if total_minutes > 0:
+        tags.append(f"练习 {total_minutes}分钟")
+    return tags
 
 
 async def build_deepseek_messages(cur, chat_id, max_history=40):
