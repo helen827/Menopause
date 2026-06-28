@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">潮安 logo mark</title>
+  <desc id="desc">An abstract soft rhythm mark for the Chao An app.</desc>
+  <defs>
+    <linearGradient id="brandMark" x1="28" y1="18" x2="99" y2="110" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#D77F8E"/>
+      <stop offset=".52" stop-color="#B591C0"/>
+      <stop offset="1" stop-color="#7F98BA"/>
+    </linearGradient>
+    <filter id="shadow" x="-18%" y="-18%" width="136%" height="142%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="6" stdDeviation="5" flood-color="#56516F" flood-opacity=".16"/>
+    </filter>
+  </defs>
+  <g fill="url(#brandMark)" filter="url(#shadow)">
+    <path d="M64 20c16.2 14.6 17.9 32.6 0 48.9C46.1 52.6 47.8 34.6 64 20Z"/>
+    <path d="M28 61.4c22.2-6.8 39.9 0 47.2 21.5-21.9 7.2-39.7.3-47.2-21.5Z"/>
+    <path d="M100 61.4c-22.2-6.8-39.9 0-47.2 21.5 21.9 7.2 39.7.3 47.2-21.5Z"/>
+    <path d="M45.7 93.4c11.2-5.9 25.4-5.9 36.6 0-8.9 13.1-27.7 13.1-36.6 0Z" opacity=".86"/>
+  </g>
+</svg>

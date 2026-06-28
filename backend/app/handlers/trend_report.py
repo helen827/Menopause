@@ -1,8 +1,13 @@
 import tornado.web
+from datetime import datetime, timedelta, timezone
 
 from app.handlers.chat import ChatBaseHandler
 from app.services.medical_checklist import load_medical_checklist, save_medical_checklist
-from app.services.trend_report import ensure_trend_report_block, save_trend_report_range
+from app.services.trend_report import (
+    ensure_trend_report_block,
+    refresh_trend_report_for_chat,
+    save_trend_report_range,
+)
 
 
 class TrendReportEnsureHandler(ChatBaseHandler):
@@ -32,7 +37,55 @@ class TrendReportLoadHandler(ChatBaseHandler):
         async with self.mysql.acquire() as conn:
             async with conn.cursor() as cur:
                 data = await ensure_trend_report_block(cur, user_entity_id)
+                chat_id = self._extract_chat_id(data)
+                if chat_id and (self._needs_trend_upgrade(data) or self._needs_date_refresh(data)):
+                    data = await refresh_trend_report_for_chat(
+                        cur,
+                        chat_id,
+                        tz_offset_minutes=480,
+                        deepseek_service=self.deepseek_service,
+                    )
         self.write_json({"success": True, "data": data})
+
+    @staticmethod
+    def _extract_chat_id(data):
+        ranges = (((data or {}).get("body") or {}).get("ranges") or {})
+        for range_data in ranges.values():
+            chat_id = ((range_data or {}).get("source") or {}).get("chat_id")
+            if chat_id:
+                return str(chat_id).strip().lower()
+        return None
+
+    @staticmethod
+    def _needs_trend_upgrade(data):
+        ranges = (((data or {}).get("body") or {}).get("ranges") or {})
+        for range_data in ranges.values():
+            report = (range_data or {}).get("report") or {}
+            trend_cards = report.get("trend_cards") or []
+            if not trend_cards:
+                continue
+            keys = {str(item.get("key") or "") for item in trend_cards if isinstance(item, dict)}
+            if "symptom_trend" not in keys and "sleep_trend" in keys:
+                return True
+        return False
+
+    @staticmethod
+    def _needs_date_refresh(data, tz_offset_minutes=480):
+        offset = timezone(timedelta(minutes=int(tz_offset_minutes or 0)))
+        today = datetime.now(offset).date().isoformat()
+        ranges = (((data or {}).get("body") or {}).get("ranges") or {})
+        if not ranges:
+            return False
+        for range_data in ranges.values():
+            end_date = str(
+                (range_data or {}).get("end_date")
+                or ((range_data or {}).get("report") or {}).get("period", {}).get("end_date")
+                or (range_data or {}).get("anchor_date")
+                or ""
+            ).strip()
+            if end_date != today:
+                return True
+        return False
 
 
 class TrendReportSaveHandler(ChatBaseHandler):

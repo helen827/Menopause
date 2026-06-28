@@ -1,8 +1,13 @@
+import json
 import uuid
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 
 from app.services.entities import get_entity_body, put_entity_body
 from app.services.trend_report import SYMPTOM_RULES
+
+
+MEDITATION_RECORDS_FILE = Path(__file__).resolve().parents[2] / "content" / "meditation_records.json"
 
 
 MODE_RHYTHMS = {
@@ -53,6 +58,27 @@ MODE_ALIASES = {
     "cool": "hot_flash",
     "hotflash": "hot_flash",
 }
+
+
+def build_empty_meditation_block(user_entity_id, block_id):
+    return {
+        "entity_type": "meditation_block",
+        "block_id": block_id,
+        "user_entity_id": user_entity_id,
+        "title": "冥想练习数据",
+        "practice_ids": [],
+        "practices": [],
+        "stats": {
+            "total_practice_count": 0,
+            "completed_practice_count": 0,
+            "total_duration_seconds": 0,
+            "latest_practice_id": None,
+            "latest_practice_at": None,
+            "mode_counts": {},
+        },
+        "createtime": now_iso(),
+        "updatetime": now_iso(),
+    }
 
 
 def now_iso():
@@ -127,6 +153,8 @@ async def record_meditation_practice(cur, user_entity_id, payload):
         "updatetime": now_iso(),
     }
     await put_entity_body(cur, practice_id, body)
+    meditation_block = await ensure_meditation_block(cur, user_entity_id)
+    await upsert_meditation_practice_to_block(cur, meditation_block["block_id"], body)
     await cur.execute(
         """
         INSERT INTO helen.meditation_practice_records
@@ -156,7 +184,164 @@ async def record_meditation_practice(cur, user_entity_id, payload):
             source,
         ),
     )
+    await _sync_meditation_records_json(cur, user_entity_id)
     return body
+
+
+async def ensure_meditation_block(cur, user_entity_id):
+    await cur.execute(
+        """
+        SELECT block_id
+        FROM helen.meditation_blocks
+        WHERE user_entity_id = %s
+        LIMIT 1
+        """,
+        (user_entity_id,),
+    )
+    row = await cur.fetchone()
+    if row:
+        block_id = row[0]
+        body = await get_entity_body(cur, block_id)
+        if not body:
+            body = build_empty_meditation_block(user_entity_id, block_id)
+            await put_entity_body(cur, block_id, body)
+        changed = False
+        body.setdefault("entity_type", "meditation_block")
+        body.setdefault("block_id", block_id)
+        body.setdefault("user_entity_id", user_entity_id)
+        body.setdefault("title", "冥想练习数据")
+        body.setdefault("practice_ids", [])
+        body.setdefault("practices", [])
+        body.setdefault(
+            "stats",
+            {
+                "total_practice_count": 0,
+                "completed_practice_count": 0,
+                "total_duration_seconds": 0,
+                "latest_practice_id": None,
+                "latest_practice_at": None,
+                "mode_counts": {},
+            },
+        )
+        if not body.get("practices"):
+            if await _backfill_meditation_block(cur, user_entity_id, block_id, body):
+                changed = True
+        if changed:
+            body["updatetime"] = now_iso()
+            await put_entity_body(cur, block_id, body)
+        return {
+            "created": False,
+            "block_id": block_id,
+            "user_entity_id": user_entity_id,
+            "body": body,
+        }
+
+    block_id = uuid.uuid4().hex
+    body = build_empty_meditation_block(user_entity_id, block_id)
+    await put_entity_body(cur, block_id, body)
+    await cur.execute(
+        """
+        INSERT INTO helen.meditation_blocks (user_entity_id, block_id)
+        VALUES (%s, %s)
+        """,
+        (user_entity_id, block_id),
+    )
+
+    user_body = await get_entity_body(cur, user_entity_id)
+    if isinstance(user_body, dict):
+        user_body["meditation_block_id"] = block_id
+        user_body["updatetime"] = now_iso()
+        await put_entity_body(cur, user_entity_id, user_body)
+
+    return {
+        "created": True,
+        "block_id": block_id,
+        "user_entity_id": user_entity_id,
+        "body": body,
+    }
+
+
+async def _backfill_meditation_block(cur, user_entity_id, block_id, block_body):
+    await cur.execute(
+        """
+        SELECT practice_id
+        FROM helen.meditation_practice_records
+        WHERE user_entity_id = %s
+        ORDER BY started_at_utc DESC, id DESC
+        """,
+        (user_entity_id,),
+    )
+    rows = await cur.fetchall()
+    if not rows:
+        return False
+
+    practices = []
+    for (practice_id,) in rows:
+        practice_body = await get_entity_body(cur, practice_id)
+        if isinstance(practice_body, dict):
+            practices.append(practice_body)
+
+    block_body["practice_ids"] = [item["practice_id"] for item in practices if item.get("practice_id")]
+    block_body["practices"] = practices
+    _refresh_meditation_block_stats(block_body)
+    block_body["updatetime"] = now_iso()
+    await put_entity_body(cur, block_id, block_body)
+    return True
+
+
+async def upsert_meditation_practice_to_block(cur, block_id, practice_body):
+    block_body = await get_entity_body(cur, block_id)
+    if not isinstance(block_body, dict):
+        raise ValueError("meditation block not found")
+
+    practices = list(block_body.get("practices") or [])
+    practice_id = practice_body.get("practice_id")
+    replaced = False
+    for index, item in enumerate(practices):
+        if item.get("practice_id") == practice_id:
+            practices[index] = practice_body
+            replaced = True
+            break
+    if not replaced:
+        practices.append(practice_body)
+
+    practices.sort(key=lambda item: item.get("started_at") or "", reverse=True)
+    block_body["practices"] = practices
+    block_body["practice_ids"] = [item.get("practice_id") for item in practices if item.get("practice_id")]
+    _refresh_meditation_block_stats(block_body)
+    block_body["updatetime"] = now_iso()
+    await put_entity_body(cur, block_id, block_body)
+
+
+def _refresh_meditation_block_stats(block_body):
+    practices = list(block_body.get("practices") or [])
+    mode_counts = {}
+    completed_count = 0
+    total_duration_seconds = 0
+    latest_practice_id = None
+    latest_practice_at = None
+
+    for item in practices:
+        if item.get("completed"):
+            completed_count += 1
+        total_duration_seconds += _safe_int(item.get("duration_seconds"), 0)
+        mode = item.get("mode") or {}
+        mode_key = mode.get("key")
+        if mode_key:
+            mode_counts[mode_key] = mode_counts.get(mode_key, 0) + 1
+        started_at = item.get("started_at")
+        if started_at and (latest_practice_at is None or started_at > latest_practice_at):
+            latest_practice_at = started_at
+            latest_practice_id = item.get("practice_id")
+
+    block_body["stats"] = {
+        "total_practice_count": len(practices),
+        "completed_practice_count": completed_count,
+        "total_duration_seconds": total_duration_seconds,
+        "latest_practice_id": latest_practice_id,
+        "latest_practice_at": latest_practice_at,
+        "mode_counts": mode_counts,
+    }
 
 
 async def load_meditation_activity(cur, user_entity_id, year, month, tz_offset_minutes=0):
@@ -172,6 +357,7 @@ async def load_meditation_activity(cur, user_entity_id, year, month, tz_offset_m
         (user_entity_id,),
     )
     rows = await cur.fetchall()
+    _write_meditation_records_json_for_user(user_entity_id, [_record_from_row(row) for row in rows])
     practice_days = set()
     all_practice_dates = set()
     mode_counts = {}
@@ -223,6 +409,109 @@ async def load_meditation_records(cur, user_entity_id, limit=50):
         (user_entity_id, int(limit)),
     )
     return [_record_from_row(row) for row in await cur.fetchall()]
+
+
+async def _sync_meditation_records_json(cur, user_entity_id):
+    await cur.execute(
+        """
+        SELECT practice_id, mode_key, mode_label, started_at_utc, ended_at_utc,
+               duration_seconds, cycle_count, completed, source
+        FROM helen.meditation_practice_records
+        WHERE user_entity_id = %s
+        ORDER BY started_at_utc ASC, id ASC
+        """,
+        (user_entity_id,),
+    )
+    rows = await cur.fetchall()
+    _write_meditation_records_json_for_user(user_entity_id, [_record_from_row(row) for row in rows])
+
+
+def _load_meditation_records_json():
+    if not MEDITATION_RECORDS_FILE.exists():
+        return {
+            "updated_at": now_iso(),
+            "users": {},
+        }
+    try:
+        with MEDITATION_RECORDS_FILE.open("r", encoding="utf-8") as fp:
+            data = json.load(fp)
+    except (OSError, json.JSONDecodeError):
+        return {
+            "updated_at": now_iso(),
+            "users": {},
+        }
+    if not isinstance(data, dict):
+        data = {}
+    if not isinstance(data.get("users"), dict):
+        data["users"] = {}
+    data.setdefault("updated_at", now_iso())
+    return data
+
+
+def _write_meditation_records_json_for_user(user_entity_id, records):
+    data = _load_meditation_records_json()
+    users = data.setdefault("users", {})
+
+    records = sorted(
+        [record for record in records if isinstance(record, dict)],
+        key=lambda item: item.get("started_at") or "",
+    )
+
+    dates = {}
+    total_practice_count = 0
+    total_duration_seconds = 0
+    latest_started_at = None
+
+    for record in records:
+        started_at = parse_datetime(record.get("started_at"))
+        if not started_at:
+            continue
+        date_key = started_at.date().isoformat()
+        duration_seconds = _safe_int(record.get("duration_seconds"), 0)
+        entry = dates.setdefault(
+            date_key,
+            {
+                "date": date_key,
+                "practice_count": 0,
+                "total_duration_seconds": 0,
+                "sessions": [],
+            },
+        )
+        entry["practice_count"] += 1
+        entry["total_duration_seconds"] += duration_seconds
+        entry["sessions"].append(
+            {
+                "practice_id": record.get("practice_id"),
+                "mode_key": record.get("mode_key"),
+                "mode_label": record.get("mode_label"),
+                "started_at": record.get("started_at"),
+                "ended_at": record.get("ended_at"),
+                "duration_seconds": duration_seconds,
+                "cycle_count": _safe_int(record.get("cycle_count"), 0),
+                "completed": bool(record.get("completed")),
+                "source": record.get("source") or "",
+            }
+        )
+        total_practice_count += 1
+        total_duration_seconds += duration_seconds
+        started_at_text = record.get("started_at")
+        if started_at_text and (latest_started_at is None or started_at_text > latest_started_at):
+            latest_started_at = started_at_text
+
+    users[user_entity_id] = {
+        "user_entity_id": user_entity_id,
+        "total_practice_count": total_practice_count,
+        "total_duration_seconds": total_duration_seconds,
+        "latest_started_at": latest_started_at,
+        "dates": [dates[key] for key in sorted(dates.keys(), reverse=True)],
+    }
+    data["updated_at"] = now_iso()
+
+    MEDITATION_RECORDS_FILE.parent.mkdir(parents=True, exist_ok=True)
+    temp_path = MEDITATION_RECORDS_FILE.with_suffix(".tmp")
+    with temp_path.open("w", encoding="utf-8") as fp:
+        json.dump(data, fp, ensure_ascii=False, indent=2)
+    temp_path.replace(MEDITATION_RECORDS_FILE)
 
 
 async def build_practice_symptom_correlation(cur, user_entity_id, days=30, tz_offset_minutes=0):

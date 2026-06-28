@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct LoginView: View {
     @StateObject private var viewModel = LoginViewModel()
@@ -25,17 +26,69 @@ struct LoginView: View {
     }
 }
 
+enum AppTheme {
+    static let powderBlue = Color(red: 0.83, green: 0.90, blue: 0.98)
+    static let lavenderGray = Color(red: 0.88, green: 0.87, blue: 0.93)
+    static let dustyPink = Color(red: 0.90, green: 0.77, blue: 0.81)
+    static let orbHighlight = Color.white.opacity(0.86)
+    static let orbShadow = Color(red: 0.86, green: 0.76, blue: 0.86).opacity(0.62)
+    static let ink = Color(red: 0.23, green: 0.18, blue: 0.26)
+    static let inkSoft = Color(red: 0.41, green: 0.35, blue: 0.44)
+    static let muted = Color(red: 0.49, green: 0.44, blue: 0.52)
+    static let rose = Color(red: 0.84, green: 0.55, blue: 0.67)
+    static let roseStrong = Color(red: 0.78, green: 0.47, blue: 0.60)
+    static let lavender = Color(red: 0.66, green: 0.58, blue: 0.79)
+    static let blue = Color(red: 0.40, green: 0.65, blue: 0.90)
+    static let cardStroke = Color.white.opacity(0.82)
+}
+
 struct AppBackground: View {
     var body: some View {
-        LinearGradient(
-            colors: [
-                Color(red: 1.0, green: 0.985, blue: 0.985),
-                Color(red: 0.953, green: 0.918, blue: 0.941),
-            ],
-            startPoint: .top,
-            endPoint: .bottom
-        )
-        .ignoresSafeArea()
+        GeometryReader { geometry in
+            ZStack {
+                LinearGradient(
+                    colors: [
+                        AppTheme.powderBlue,
+                        AppTheme.lavenderGray,
+                        AppTheme.dustyPink,
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+
+                RadialGradient(
+                    colors: [
+                        Color.white.opacity(0.42),
+                        Color.clear
+                    ],
+                    center: .topLeading,
+                    startRadius: 20,
+                    endRadius: geometry.size.width * 0.7
+                )
+
+                Circle()
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                AppTheme.orbHighlight,
+                                Color.white.opacity(0.58),
+                                AppTheme.orbShadow,
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .overlay {
+                        Circle()
+                            .stroke(Color.white.opacity(0.42), lineWidth: 2)
+                    }
+                    .frame(width: min(geometry.size.width * 1.02, 520), height: min(geometry.size.width * 1.02, 520))
+                    .blur(radius: 1.2)
+                    .position(x: geometry.size.width * 0.52, y: geometry.size.height * 0.82)
+                    .shadow(color: Color.white.opacity(0.32), radius: 40, y: -8)
+            }
+            .ignoresSafeArea()
+        }
     }
 }
 
@@ -46,21 +99,22 @@ struct BrandMark: View {
                 RoundedRectangle(cornerRadius: 30, style: .continuous)
                     .fill(.white.opacity(0.92))
                     .frame(width: 106, height: 106)
-                    .shadow(color: Color(red: 0.46, green: 0.34, blue: 0.41).opacity(0.22), radius: 36, y: 24)
+                    .shadow(color: AppTheme.rose.opacity(0.16), radius: 36, y: 24)
 
-                FlowerMark()
-                    .fill(Color(red: 0.64, green: 0.48, blue: 0.56))
-                    .frame(width: 58, height: 48)
+                Image("LoginLogo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 64, height: 64)
             }
-            .rotationEffect(.degrees(2))
             .padding(.bottom, 20)
 
             Text("潮安")
                 .font(.system(size: 48, weight: .black))
+                .foregroundStyle(AppTheme.ink)
 
             Text("登录后保存你的记录与报告")
                 .font(.system(size: 20, weight: .bold))
-                .foregroundStyle(Color(red: 0.45, green: 0.41, blue: 0.44))
+                .foregroundStyle(AppTheme.muted)
         }
     }
 }
@@ -77,7 +131,7 @@ private struct LoginCard: View {
 
             Text("输入手机号，获取验证码后开始访问。")
                 .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(Color(red: 0.47, green: 0.41, blue: 0.44))
+                .foregroundStyle(AppTheme.muted)
                 .padding(.bottom, 22)
 
             FieldTitle("手机号")
@@ -128,12 +182,7 @@ private struct LoginCard: View {
             }
         }
         .padding(24)
-        .background(.white.opacity(0.72), in: RoundedRectangle(cornerRadius: 28, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 28, style: .continuous)
-                .stroke(Color(red: 0.91, green: 0.86, blue: 0.89), lineWidth: 1)
-        }
-        .shadow(color: Color(red: 0.43, green: 0.34, blue: 0.40).opacity(0.12), radius: 30, y: 18)
+        .glassCard(cornerRadius: 30)
     }
 
     private var statusColor: Color {
@@ -157,7 +206,7 @@ private struct FieldTitle: View {
     var body: some View {
         Text(text)
             .font(.system(size: 14, weight: .bold))
-            .foregroundStyle(Color(red: 0.43, green: 0.37, blue: 0.40))
+            .foregroundStyle(AppTheme.inkSoft)
             .padding(.bottom, 8)
     }
 }
@@ -204,10 +253,10 @@ private struct LoginTextFieldStyle: TextFieldStyle {
             .font(.system(size: 17, weight: .semibold))
             .padding(.horizontal, 15)
             .frame(height: 52)
-            .background(.white.opacity(0.88), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
             .overlay {
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(Color(red: 0.91, green: 0.86, blue: 0.89), lineWidth: 1)
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(AppTheme.cardStroke, lineWidth: 1)
             }
     }
 }
@@ -216,9 +265,13 @@ private struct SendCodeButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.system(size: 14, weight: .bold))
-            .foregroundStyle(.white)
+            .foregroundStyle(AppTheme.roseStrong)
             .frame(width: 116, height: 52)
-            .background(Color(red: 0.64, green: 0.48, blue: 0.56), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(AppTheme.cardStroke, lineWidth: 1)
+            }
             .scaleEffect(configuration.isPressed ? 0.98 : 1)
     }
 }
@@ -227,10 +280,46 @@ private struct PrimaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.system(size: 20, weight: .black))
-            .foregroundStyle(.white)
+            .foregroundStyle(AppTheme.ink)
             .frame(maxWidth: .infinity, minHeight: 64)
-            .background(Color(red: 0.18, green: 0.16, blue: 0.18), in: Capsule())
+            .background(.regularMaterial, in: Capsule())
+            .overlay {
+                Capsule()
+                    .stroke(AppTheme.cardStroke, lineWidth: 1)
+            }
+            .shadow(color: AppTheme.rose.opacity(0.12), radius: 18, y: 10)
             .scaleEffect(configuration.isPressed ? 0.985 : 1)
+    }
+}
+
+struct AppGlassCircleButtonStyle: ButtonStyle {
+    var foreground: Color = AppTheme.ink
+    var size: CGFloat = 52
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.system(size: 20, weight: .black))
+            .foregroundStyle(foreground)
+            .frame(width: size, height: size)
+            .background(.regularMaterial, in: Circle())
+            .overlay {
+                Circle()
+                    .stroke(AppTheme.cardStroke, lineWidth: 1)
+            }
+            .shadow(color: Color.white.opacity(0.16), radius: 12, y: 6)
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+    }
+}
+
+extension View {
+    func glassCard(cornerRadius: CGFloat = 28) -> some View {
+        self
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .stroke(AppTheme.cardStroke, lineWidth: 1)
+            }
+            .shadow(color: AppTheme.rose.opacity(0.10), radius: 26, y: 16)
     }
 }
 

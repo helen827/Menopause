@@ -21,6 +21,7 @@ from app.handlers.chat import (
     ChatWebSocketHandler,
 )
 from app.handlers.data_query import DataJsonHandler, LoginSearchHandler
+from app.handlers.debug_lookup import DebugMobileChatLookupHandler
 from app.handlers.health import HealthHandler
 from app.handlers.knowledge import (
     KnowledgeActiveHandler,
@@ -29,7 +30,13 @@ from app.handlers.knowledge import (
     KnowledgeSearchHandler,
 )
 from app.handlers.mobile_entity import MobileEntityHandler
-from app.handlers.pages import ChatPageHandler, DailyQuotePageHandler, LoginPageHandler
+from app.handlers.pages import (
+    ChatPageHandler,
+    DailyQuotePageHandler,
+    LoginPageHandler,
+    MobileChatLookupPageHandler,
+    TrendReportPageHandler,
+)
 from app.handlers.meditation import (
     MeditationPracticeCorrelationHandler,
     MeditationPracticeListHandler,
@@ -55,10 +62,13 @@ def make_app(mysql_pool):
             (r"/login", LoginPageHandler),
             (r"/chat", ChatPageHandler),
             (r"/daily_quote", DailyQuotePageHandler),
+            (r"/mobile_chat_lookup", MobileChatLookupPageHandler),
+            (r"/trend_report", TrendReportPageHandler),
             (r"/api/users", UsersHandler),
             (r"/api/mobile/entity", MobileEntityHandler),
             (r"/api/data/json", DataJsonHandler),
             (r"/api/login_search", LoginSearchHandler),
+            (r"/api/debug/mobile_chat_lookup", DebugMobileChatLookupHandler),
             (r"/api/send_code", SendCodeHandler),
             (r"/api/login", LoginHandler),
             (r"/api/check_login", CheckLoginHandler),

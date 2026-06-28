@@ -1,0 +1,1193 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>潮安用户聊天查看</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f1f4;
+      --panel: rgba(255, 255, 255, 0.9);
+      --panel-soft: rgba(255, 251, 253, 0.82);
+      --line: #eadbe3;
+      --ink: #2d292b;
+      --muted: #756871;
+      --accent: #9d7489;
+      --accent-strong: #2f292d;
+      --user-bubble: #2f292d;
+      --assistant-bubble: #ffffff;
+      --ok: #177245;
+      --danger: #b42318;
+      --warn: #9f5f1f;
+      --shadow: 0 24px 70px rgba(111, 88, 101, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top, rgba(255, 255, 255, 0.84), transparent 28%),
+        linear-gradient(180deg, #fffafb 0%, #f4ebf1 100%);
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    .shell {
+      width: min(100%, 1480px);
+      margin: 0 auto;
+      padding: 28px 20px 36px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-mark {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      background: #fff;
+      box-shadow: 0 12px 30px rgba(111, 88, 101, 0.12);
+      color: var(--accent);
+      font-size: 22px;
+      font-weight: 900;
+    }
+
+    .brand-copy h1 {
+      margin: 0;
+      font-size: 28px;
+      line-height: 1.1;
+      font-weight: 860;
+    }
+
+    .brand-copy p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 650;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 34px;
+      padding: 0 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.75);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 780;
+    }
+
+    .status-pill .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--warn);
+    }
+
+    .status-pill.ok .dot {
+      background: var(--ok);
+    }
+
+    .status-pill.error .dot {
+      background: var(--danger);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 360px minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+    }
+
+    .sidebar {
+      padding: 18px;
+      display: grid;
+      gap: 16px;
+      position: sticky;
+      top: 20px;
+    }
+
+    .panel-title {
+      margin: 0 0 12px;
+      font-size: 14px;
+      font-weight: 850;
+      color: #6a5d65;
+      letter-spacing: 0;
+    }
+
+    .lookup-form {
+      display: grid;
+      gap: 10px;
+    }
+
+    label {
+      display: block;
+      margin: 0 0 8px;
+      color: #6a5d65;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    input {
+      width: 100%;
+      height: 50px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #fff;
+      color: var(--ink);
+      outline: none;
+      padding: 0 15px;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    input:focus {
+      border-color: #b892a6;
+      box-shadow: 0 0 0 4px rgba(184, 146, 166, 0.15);
+    }
+
+    .button-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    button {
+      min-height: 46px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: #655760;
+      font-size: 14px;
+      font-weight: 820;
+      cursor: pointer;
+      transition: transform 0.14s ease, background 0.14s ease;
+    }
+
+    button.primary {
+      border-color: var(--accent-strong);
+      background: var(--accent-strong);
+      color: #fff;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .hint {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+      font-weight: 620;
+    }
+
+    .summary-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .summary-card {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--panel-soft);
+      padding: 14px;
+    }
+
+    .summary-card h3 {
+      margin: 0 0 8px;
+      font-size: 13px;
+      color: #6b5c65;
+      font-weight: 840;
+    }
+
+    .summary-card strong,
+    .summary-card code {
+      display: block;
+      color: var(--ink);
+      font-size: 15px;
+      line-height: 1.45;
+      font-weight: 790;
+      word-break: break-word;
+    }
+
+    .summary-card code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 13px;
+      background: rgba(255, 255, 255, 0.72);
+      border-radius: 10px;
+      padding: 8px 10px;
+    }
+
+    .content {
+      display: grid;
+      gap: 16px;
+    }
+
+    .calendar-card {
+      padding: 22px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .calendar-head,
+    .calendar-subhead {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .calendar-title {
+      font-size: 22px;
+      font-weight: 860;
+      line-height: 1.1;
+    }
+
+    .calendar-caption,
+    .calendar-meta {
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 760;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .weekday {
+      height: 22px;
+      display: grid;
+      place-items: center;
+      color: #8d8088;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .day-cell,
+    .day-empty {
+      min-height: 42px;
+      border-radius: 10px;
+    }
+
+    .day-empty {
+      background: transparent;
+    }
+
+    .day-cell {
+      display: grid;
+      place-items: center;
+      border: 1px solid #ead8e2;
+      background: rgba(255, 248, 251, 0.92);
+      color: #6d6169;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .day-cell.checkin {
+      background: #db9b9f;
+      color: #fff;
+      border-color: #db9b9f;
+    }
+
+    .day-cell.meditation {
+      border-width: 2px;
+      border-color: #bfa252;
+    }
+
+    .day-cell.meditation:not(.checkin) {
+      background: rgba(246, 239, 212, 0.92);
+      color: #6b5f3d;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      padding-top: 2px;
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--panel-soft);
+      padding: 16px;
+      text-align: center;
+    }
+
+    .metric-value {
+      font-size: 30px;
+      line-height: 1;
+      font-weight: 860;
+      color: #8f7a84;
+    }
+
+    .metric-label {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 760;
+    }
+
+    .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .hero {
+      padding: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(247, 239, 243, 0.84));
+    }
+
+    .hero h2 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.1;
+      font-weight: 860;
+    }
+
+    .hero p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+      font-weight: 650;
+      max-width: 720px;
+    }
+
+    .hero-meta {
+      display: grid;
+      gap: 8px;
+      text-align: right;
+    }
+
+    .hero-chip {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 38px;
+      padding: 0 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.82);
+      border: 1px solid var(--line);
+      color: #655760;
+      font-size: 13px;
+      font-weight: 820;
+      white-space: nowrap;
+    }
+
+    .chat-layout {
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr);
+      gap: 16px;
+    }
+
+    .chat-list,
+    .chat-stage {
+      padding: 18px;
+    }
+
+    .chat-items {
+      display: grid;
+      gap: 10px;
+      max-height: calc(100vh - 250px);
+      overflow: auto;
+      padding-right: 2px;
+    }
+
+    .chat-item {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--panel-soft);
+      padding: 14px;
+      cursor: pointer;
+      transition: border-color 0.14s ease, background 0.14s ease;
+    }
+
+    .chat-item.active {
+      border-color: var(--accent);
+      background: #fff;
+    }
+
+    .chat-item h3 {
+      margin: 0 0 6px;
+      font-size: 16px;
+      line-height: 1.35;
+      font-weight: 820;
+    }
+
+    .chat-item p,
+    .chat-item code {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+      font-weight: 700;
+      word-break: break-word;
+    }
+
+    .chat-item code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    .chat-stage {
+      display: grid;
+      gap: 16px;
+      min-height: 760px;
+    }
+
+    .chat-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .chat-meta-card {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--panel-soft);
+      padding: 14px;
+    }
+
+    .chat-meta-card h4 {
+      margin: 0 0 8px;
+      font-size: 12px;
+      color: #6a5d65;
+      font-weight: 830;
+    }
+
+    .chat-meta-card div,
+    .chat-meta-card code {
+      font-size: 13px;
+      line-height: 1.5;
+      font-weight: 760;
+      word-break: break-word;
+    }
+
+    .chat-meta-card code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    .messages {
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(251, 247, 249, 0.94));
+      padding: 18px;
+      display: grid;
+      gap: 14px;
+      align-content: start;
+      min-height: 420px;
+      max-height: calc(100vh - 385px);
+      overflow: auto;
+    }
+
+    .message {
+      display: grid;
+      gap: 6px;
+    }
+
+    .message.user {
+      justify-items: end;
+    }
+
+    .message.assistant,
+    .message.unknown {
+      justify-items: start;
+    }
+
+    .bubble {
+      max-width: min(78%, 860px);
+      padding: 14px 16px;
+      border-radius: 20px;
+      line-height: 1.62;
+      font-size: 15px;
+      font-weight: 650;
+      white-space: pre-wrap;
+      word-break: break-word;
+      box-shadow: 0 10px 24px rgba(111, 88, 101, 0.08);
+    }
+
+    .message.user .bubble {
+      background: var(--user-bubble);
+      color: #fff;
+    }
+
+    .message.assistant .bubble,
+    .message.unknown .bubble {
+      background: var(--assistant-bubble);
+      color: var(--ink);
+      border: 1px solid var(--line);
+    }
+
+    .meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 760;
+      flex-wrap: wrap;
+    }
+
+    .message.user .meta {
+      justify-content: flex-end;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 22px;
+      padding: 0 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid var(--line);
+    }
+
+    .empty {
+      border: 1px dashed var(--line);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.55);
+      color: var(--muted);
+      padding: 24px;
+      text-align: center;
+      font-size: 15px;
+      line-height: 1.6;
+      font-weight: 650;
+    }
+
+    .error-text {
+      color: var(--danger);
+    }
+
+    @media (max-width: 1120px) {
+      .layout,
+      .chat-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: static;
+      }
+
+      .chat-meta-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .messages {
+        max-height: none;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .shell {
+        padding-left: 14px;
+        padding-right: 14px;
+      }
+
+      .topbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .hero {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .hero-meta {
+        width: 100%;
+        text-align: left;
+      }
+
+      .button-row,
+      .chat-meta-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .bubble {
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="topbar">
+      <div class="brand">
+        <div class="brand-mark">潮</div>
+        <div class="brand-copy">
+          <h1>用户聊天查看</h1>
+          <p>像 iOS 客户端一样浏览用户 ID、chat 和最近消息，方便做调试和核对。</p>
+        </div>
+      </div>
+      <div id="statusPill" class="status-pill">
+        <span class="dot"></span>
+        <span>等待查询</span>
+      </div>
+    </div>
+
+    <div class="layout">
+      <aside class="sidebar panel">
+        <section>
+          <h2 class="panel-title">查询手机号</h2>
+          <div class="lookup-form">
+            <div>
+              <label for="mobileInput">手机号</label>
+              <input id="mobileInput" inputmode="numeric" maxlength="11" placeholder="输入 11 位手机号" value="15121150684">
+            </div>
+            <div class="button-row">
+              <button id="lookupButton" class="primary">查询用户</button>
+              <button id="fillSampleButton">填入示例</button>
+            </div>
+            <p class="hint">走临时接口 <code>/api/debug/mobile_chat_lookup</code>，会把这个手机号对应的用户信息和最近聊天内容一起拉回来。</p>
+          </div>
+        </section>
+
+        <section>
+          <h2 class="panel-title">用户概览</h2>
+          <div id="summaryGrid" class="summary-grid">
+            <div class="summary-card">
+              <h3>状态</h3>
+              <strong>还没有加载数据</strong>
+            </div>
+          </div>
+        </section>
+      </aside>
+
+      <main class="content">
+        <section class="hero panel">
+          <div>
+            <h2 id="heroTitle">先查询一个用户</h2>
+            <p id="heroDesc">查到后，这里会显示用户 ID、chat 数量和最近更新时间。右边可以切换不同 chat，下面直接看消息气泡。</p>
+          </div>
+          <div class="hero-meta">
+            <div id="heroUserChip" class="hero-chip">user_id: 未加载</div>
+            <div id="heroChatChip" class="hero-chip">chat: 0 个</div>
+          </div>
+        </section>
+
+        <section class="calendar-card panel">
+          <div class="calendar-head">
+            <div class="calendar-title">可视化记录</div>
+            <div id="calendarScope" class="calendar-caption">本月</div>
+          </div>
+          <div class="calendar-subhead">
+            <div id="calendarMonth" class="calendar-title" style="font-size:18px;font-weight:840;color:#655760;">未加载</div>
+            <div id="calendarCheckinMeta" class="calendar-meta">打卡 0 天</div>
+          </div>
+          <div id="calendarGrid" class="calendar-grid">
+            <div class="empty" style="grid-column:1 / -1;">查到用户后，这里会显示和 iOS 一样的可视化记录。</div>
+          </div>
+          <div class="metrics">
+            <div class="metric">
+              <div id="metricStreak" class="metric-value">0</div>
+              <div class="metric-label">连续记录</div>
+            </div>
+            <div class="metric">
+              <div id="metricPractice" class="metric-value">0</div>
+              <div class="metric-label">练习次数</div>
+            </div>
+          </div>
+          <div id="calendarTags" class="tag-list"></div>
+        </section>
+
+        <section class="chat-layout">
+          <div class="chat-list panel">
+            <h2 class="panel-title">Chat 列表</h2>
+            <div id="chatItems" class="chat-items">
+              <div class="empty">还没有 chat 数据。</div>
+            </div>
+          </div>
+
+          <div class="chat-stage panel">
+            <div class="chat-meta-grid" id="chatMetaGrid">
+              <div class="chat-meta-card">
+                <h4>当前 chat</h4>
+                <div>未选择</div>
+              </div>
+            </div>
+            <div id="messages" class="messages">
+              <div class="empty">查到用户后，这里会按 iOS 风格显示最近消息。</div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    const state = {
+      payload: null,
+      selectedChatId: null,
+      loading: false,
+      recordCalendar: null,
+    };
+
+    const mobileInput = document.getElementById("mobileInput");
+    const lookupButton = document.getElementById("lookupButton");
+    const fillSampleButton = document.getElementById("fillSampleButton");
+    const statusPill = document.getElementById("statusPill");
+    const summaryGrid = document.getElementById("summaryGrid");
+    const heroTitle = document.getElementById("heroTitle");
+    const heroDesc = document.getElementById("heroDesc");
+    const heroUserChip = document.getElementById("heroUserChip");
+    const heroChatChip = document.getElementById("heroChatChip");
+    const chatItems = document.getElementById("chatItems");
+    const chatMetaGrid = document.getElementById("chatMetaGrid");
+    const messages = document.getElementById("messages");
+    const calendarScope = document.getElementById("calendarScope");
+    const calendarMonth = document.getElementById("calendarMonth");
+    const calendarCheckinMeta = document.getElementById("calendarCheckinMeta");
+    const calendarGrid = document.getElementById("calendarGrid");
+    const metricStreak = document.getElementById("metricStreak");
+    const metricPractice = document.getElementById("metricPractice");
+    const calendarTags = document.getElementById("calendarTags");
+
+    function setStatus(text, kind = "idle") {
+      statusPill.className = "status-pill";
+      if (kind === "ok") statusPill.classList.add("ok");
+      if (kind === "error") statusPill.classList.add("error");
+      statusPill.innerHTML = `<span class="dot"></span><span>${escapeHtml(text)}</span>`;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll("\"", "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function formatDate(value) {
+      if (!value) return "—";
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return value;
+      return date.toLocaleString("zh-CN", { hour12: false });
+    }
+
+    function shorten(value, size = 12) {
+      const text = String(value ?? "");
+      if (text.length <= size * 2) return text;
+      return `${text.slice(0, size)}...${text.slice(-size)}`;
+    }
+
+    function currentChat() {
+      return state.payload?.chats?.find((item) => item.chat_id === state.selectedChatId) || null;
+    }
+
+    function monthCalendarCells(year, month) {
+      const firstDay = new Date(year, month - 1, 1);
+      const lastDate = new Date(year, month, 0).getDate();
+      const weekday = firstDay.getDay();
+      const leadingBlankCount = (weekday + 6) % 7;
+      return [
+        ...Array.from({ length: leadingBlankCount }, () => null),
+        ...Array.from({ length: lastDate }, (_, index) => index + 1),
+      ];
+    }
+
+    function parseDateOnly(value) {
+      if (!value) return null;
+      const parts = String(value).split("-").map(Number);
+      if (parts.length !== 3 || parts.some(Number.isNaN)) return null;
+      return new Date(parts[0], parts[1] - 1, parts[2]);
+    }
+
+    function extractRecordedDates(trendReport) {
+      const ranges = trendReport?.body?.ranges || {};
+      for (const key of ["90d", "30d", "7d"]) {
+        const dates = ranges[key]?.source?.recorded_dates || ranges[key]?.source?.recordedDates || [];
+        const parsed = dates.map(parseDateOnly).filter(Boolean);
+        if (parsed.length) return parsed;
+      }
+      return [];
+    }
+
+    function checkinStreak(dates) {
+      const normalized = new Set(dates.map((date) => {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, "0");
+        const d = String(date.getDate()).padStart(2, "0");
+        return `${y}-${m}-${d}`;
+      }));
+      const today = new Date();
+      let cursor = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      let streak = 0;
+      while (true) {
+        const y = cursor.getFullYear();
+        const m = String(cursor.getMonth() + 1).padStart(2, "0");
+        const d = String(cursor.getDate()).padStart(2, "0");
+        const key = `${y}-${m}-${d}`;
+        if (!normalized.has(key)) break;
+        streak += 1;
+        cursor.setDate(cursor.getDate() - 1);
+      }
+      return streak;
+    }
+
+    function buildTags(summary) {
+      const labels = {
+        mood: "舒缓心情",
+        sleep: "助眠安睡",
+        hot_flash: "缓解潮热",
+      };
+      const tags = [];
+      const modeCounts = summary?.mode_counts || summary?.modeCounts || {};
+      for (const key of ["mood", "sleep", "hot_flash"]) {
+        const count = modeCounts[key] || 0;
+        if (count > 0 && labels[key]) {
+          tags.push(`${labels[key]} ${count}次`);
+        }
+      }
+      const totalDurationSeconds = summary?.total_duration_seconds || summary?.totalDurationSeconds || 0;
+      const totalMinutes = Math.floor(totalDurationSeconds / 60);
+      if (totalMinutes > 0) {
+        tags.push(`练习 ${totalMinutes}分钟`);
+      }
+      return tags;
+    }
+
+    function buildRecordCalendar(trendData, meditationData) {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth() + 1;
+      const recordedDates = extractRecordedDates(trendData);
+      const chatDays = new Set(
+        recordedDates
+          .filter((date) => date.getFullYear() === year && date.getMonth() + 1 === month)
+          .map((date) => date.getDate())
+      );
+      const practiceDays = new Set(meditationData?.practice_days || meditationData?.practiceDays || []);
+      const recordDays = new Set([...chatDays, ...practiceDays]);
+      const practiceStreak = meditationData?.practice_streak || meditationData?.practiceStreak || 0;
+      const practiceCount = meditationData?.practice_count || meditationData?.practiceCount || 0;
+      const recordDateObjects = [
+        ...recordedDates,
+        ...Array.from(practiceDays).map((day) => new Date(year, month - 1, day)),
+      ];
+      return {
+        year,
+        month,
+        scopeTitle: "本月",
+        checkinDays: chatDays,
+        recordDays,
+        meditationDays: practiceDays,
+        consecutiveDays: Math.max(checkinStreak(recordDateObjects), practiceStreak),
+        practiceCount,
+        tags: buildTags(meditationData || {}),
+      };
+    }
+
+    function renderSummary() {
+      const data = state.payload;
+      if (!data) {
+        summaryGrid.innerHTML = `
+          <div class="summary-card">
+            <h3>状态</h3>
+            <strong>还没有加载数据</strong>
+          </div>
+        `;
+        return;
+      }
+
+      summaryGrid.innerHTML = `
+        <div class="summary-card">
+          <h3>手机号</h3>
+          <strong>${escapeHtml(data.mobile)}</strong>
+        </div>
+        <div class="summary-card">
+          <h3>登录键</h3>
+          <code>${escapeHtml(data.login)}</code>
+        </div>
+        <div class="summary-card">
+          <h3>用户 ID</h3>
+          <code>${escapeHtml(data.user_entity_id)}</code>
+        </div>
+        <div class="summary-card">
+          <h3>存储库</h3>
+          <strong>${escapeHtml(data.database)}</strong>
+        </div>
+        <div class="summary-card">
+          <h3>建立时间</h3>
+          <strong>${escapeHtml(formatDate(data.createtime))}</strong>
+        </div>
+        <div class="summary-card">
+          <h3>搜索字段</h3>
+          <strong>${escapeHtml(data.search || "—")}</strong>
+        </div>
+      `;
+    }
+
+    function renderHero() {
+      const data = state.payload;
+      if (!data) {
+        heroTitle.textContent = "先查询一个用户";
+        heroDesc.textContent = "查到后，这里会显示用户 ID、chat 数量和最近更新时间。右边可以切换不同 chat，下面直接看消息气泡。";
+        heroUserChip.textContent = "user_id: 未加载";
+        heroChatChip.textContent = "chat: 0 个";
+        return;
+      }
+
+      const chat = currentChat();
+      heroTitle.textContent = `${data.mobile} 的聊天记录`;
+      heroDesc.textContent = chat
+        ? `当前查看 chat ${shorten(chat.chat_id, 8)}，共 ${chat.total_comments} 条消息，最近更新时间 ${formatDate(chat.updatetime)}。`
+        : `这个用户目前有 ${data.chat_count} 个 chat，可以在左侧切换查看。`;
+      heroUserChip.textContent = `user_id: ${shorten(data.user_entity_id, 10)}`;
+      heroChatChip.textContent = `chat: ${data.chat_count} 个`;
+    }
+
+    function renderRecordCalendar() {
+      const data = state.recordCalendar;
+      if (!data) {
+        calendarScope.textContent = "本月";
+        calendarMonth.textContent = "未加载";
+        calendarCheckinMeta.textContent = "打卡 0 天";
+        metricStreak.textContent = "0";
+        metricPractice.textContent = "0";
+        calendarTags.innerHTML = "";
+        calendarGrid.innerHTML = `<div class="empty" style="grid-column:1 / -1;">查到用户后，这里会显示和 iOS 一样的可视化记录。</div>`;
+        return;
+      }
+
+      calendarScope.textContent = data.scopeTitle;
+      calendarMonth.textContent = `${data.year}年${data.month}月`;
+      calendarCheckinMeta.textContent = `打卡 ${data.recordDays.size} 天`;
+      metricStreak.textContent = String(data.consecutiveDays);
+      metricPractice.textContent = String(data.practiceCount);
+
+      const weekdayLabels = ["一", "二", "三", "四", "五", "六", "日"];
+      const cells = monthCalendarCells(data.year, data.month);
+      calendarGrid.innerHTML = [
+        ...weekdayLabels.map((label) => `<div class="weekday">${label}</div>`),
+        ...cells.map((day) => {
+          if (!day) return `<div class="day-empty"></div>`;
+          const classes = [
+            "day-cell",
+            data.checkinDays.has(day) ? "checkin" : "",
+            data.meditationDays.has(day) ? "meditation" : "",
+          ].filter(Boolean).join(" ");
+          return `<div class="${classes}">${day}</div>`;
+        })
+      ].join("");
+
+      calendarTags.innerHTML = (data.tags || []).map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("");
+    }
+
+    function renderChatList() {
+      const chats = state.payload?.chats || [];
+      if (!chats.length) {
+        chatItems.innerHTML = `<div class="empty">这个用户还没有 chat。</div>`;
+        return;
+      }
+
+      chatItems.innerHTML = chats.map((chat) => `
+        <button class="chat-item ${chat.chat_id === state.selectedChatId ? "active" : ""}" data-chat-id="${escapeHtml(chat.chat_id)}">
+          <h3>${escapeHtml(chat.title || "默认对话")}</h3>
+          <p>${escapeHtml(chat.total_comments)} 条消息 · ${chat.showoff ? "showoff:on" : "showoff:off"}</p>
+          <p>${escapeHtml(formatDate(chat.updatetime))}</p>
+          <code>${escapeHtml(shorten(chat.chat_id, 8))}</code>
+        </button>
+      `).join("");
+
+      chatItems.querySelectorAll("[data-chat-id]").forEach((button) => {
+        button.addEventListener("click", () => {
+          state.selectedChatId = button.dataset.chatId;
+          render();
+        });
+      });
+    }
+
+    function renderChatMeta() {
+      const chat = currentChat();
+      if (!chat) {
+        chatMetaGrid.innerHTML = `
+          <div class="chat-meta-card">
+            <h4>当前 chat</h4>
+            <div>未选择</div>
+          </div>
+        `;
+        return;
+      }
+
+      chatMetaGrid.innerHTML = `
+        <div class="chat-meta-card">
+          <h4>chat_id</h4>
+          <code>${escapeHtml(chat.chat_id)}</code>
+        </div>
+        <div class="chat-meta-card">
+          <h4>active_prompt_id</h4>
+          <code>${escapeHtml(chat.active_prompt_id || "—")}</code>
+        </div>
+        <div class="chat-meta-card">
+          <h4>消息总数</h4>
+          <div>${escapeHtml(String(chat.total_comments))}</div>
+        </div>
+        <div class="chat-meta-card">
+          <h4>更新时间</h4>
+          <div>${escapeHtml(formatDate(chat.updatetime))}</div>
+        </div>
+      `;
+    }
+
+    function renderMessages() {
+      const chat = currentChat();
+      if (!chat) {
+        messages.innerHTML = `<div class="empty">选中一个 chat 后，这里会显示最近 20 条消息。</div>`;
+        return;
+      }
+
+      if (!chat.recent_comments?.length) {
+        messages.innerHTML = `<div class="empty">这个 chat 里暂时没有可展示的消息。</div>`;
+        return;
+      }
+
+      messages.innerHTML = chat.recent_comments.map((comment) => {
+        const role = comment.role || "unknown";
+        const prompt = comment.system_prompt?.title ? `<span class="tag">prompt: ${escapeHtml(comment.system_prompt.title)}</span>` : "";
+        return `
+          <article class="message ${escapeHtml(role)}">
+            <div class="bubble">${escapeHtml(comment.content || "")}</div>
+            <div class="meta">
+              <span class="tag">${escapeHtml(role)}</span>
+              <span>${escapeHtml(formatDate(comment.createtime))}</span>
+              <span>${escapeHtml(shorten(comment.comment_id || "", 8))}</span>
+              ${prompt}
+            </div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function render() {
+      renderSummary();
+      renderHero();
+      renderRecordCalendar();
+      renderChatList();
+      renderChatMeta();
+      renderMessages();
+    }
+
+    async function lookup() {
+      const mobile = mobileInput.value.trim();
+      if (!/^\d{11}$/.test(mobile)) {
+        setStatus("请输入 11 位手机号", "error");
+        return;
+      }
+
+      state.loading = true;
+      lookupButton.disabled = true;
+      setStatus("正在查询用户和聊天记录");
+
+      try {
+        const response = await fetch(`/api/debug/mobile_chat_lookup?mobile=${encodeURIComponent(mobile)}`);
+        const payload = await response.json();
+        if (!response.ok || payload.error) {
+          throw new Error(payload.error || payload.message || "查询失败");
+        }
+
+        state.payload = payload;
+        state.selectedChatId = payload.chats?.[0]?.chat_id || null;
+        state.recordCalendar = null;
+        if (payload.user_entity_id) {
+          const now = new Date();
+          const year = now.getFullYear();
+          const month = now.getMonth() + 1;
+          const tzOffsetMinutes = -now.getTimezoneOffset();
+          const [trendResponse, meditationResponse] = await Promise.all([
+            fetch(`/api/trend_report/load?user_id=${encodeURIComponent(payload.user_entity_id)}`),
+            fetch(`/api/meditation/practice/summary?user_id=${encodeURIComponent(payload.user_entity_id)}&year=${year}&month=${month}&tz_offset_minutes=${tzOffsetMinutes}`),
+          ]);
+          const trendPayload = await trendResponse.json();
+          let meditationPayload = { data: null };
+          if (meditationResponse.ok) {
+            meditationPayload = await meditationResponse.json();
+          } else {
+            try {
+              meditationPayload = await meditationResponse.json();
+            } catch (_) {
+              meditationPayload = { data: null };
+            }
+          }
+          if (trendResponse.ok) {
+            state.recordCalendar = buildRecordCalendar(trendPayload.data, meditationPayload.data);
+          }
+        }
+        setStatus(`已加载 ${payload.mobile} 的聊天记录`, "ok");
+        render();
+      } catch (error) {
+        state.payload = null;
+        state.selectedChatId = null;
+        state.recordCalendar = null;
+        render();
+        setStatus(error.message || "查询失败", "error");
+      } finally {
+        state.loading = false;
+        lookupButton.disabled = false;
+      }
+    }
+
+    lookupButton.addEventListener("click", lookup);
+    fillSampleButton.addEventListener("click", () => {
+      mobileInput.value = "15121150684";
+      mobileInput.focus();
+    });
+    mobileInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        lookup();
+      }
+    });
+
+    render();
+    lookup();
+  </script>
+</body>
+</html>

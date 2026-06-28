@@ -351,6 +351,36 @@ struct MeditationPracticeSummaryResponse: Decodable {
     let data: MeditationPracticeSummaryData
 }
 
+struct MeditationPracticeListResponse: Decodable {
+    let data: [MeditationPracticeListItem]
+}
+
+struct MeditationPracticeListItem: Decodable, Identifiable {
+    let practiceId: String
+    let modeKey: String
+    let modeLabel: String
+    let startedAt: String?
+    let endedAt: String?
+    let durationSeconds: Int
+    let cycleCount: Int
+    let completed: Bool
+    let source: String
+
+    var id: String { practiceId }
+
+    enum CodingKeys: String, CodingKey {
+        case practiceId = "practice_id"
+        case modeKey = "mode_key"
+        case modeLabel = "mode_label"
+        case startedAt = "started_at"
+        case endedAt = "ended_at"
+        case durationSeconds = "duration_seconds"
+        case cycleCount = "cycle_count"
+        case completed
+        case source
+    }
+}
+
 struct MeditationPracticeSummaryData: Decodable {
     let year: Int
     let month: Int
@@ -368,6 +398,18 @@ struct MeditationPracticeSummaryData: Decodable {
         case practiceStreak = "practice_streak"
         case totalDurationSeconds = "total_duration_seconds"
         case modeCounts = "mode_counts"
+    }
+
+    static func empty(year: Int, month: Int) -> MeditationPracticeSummaryData {
+        MeditationPracticeSummaryData(
+            year: year,
+            month: month,
+            practiceDays: [],
+            practiceCount: 0,
+            practiceStreak: 0,
+            totalDurationSeconds: 0,
+            modeCounts: [:]
+        )
     }
 }
 
@@ -415,6 +457,7 @@ struct TrendReportRangeData: Decodable {
     let generatedAt: String?
     let generationMode: String?
     let generationError: String?
+    let source: TrendReportRangeSourceData?
     let report: TrendReportPayload?
 
     enum CodingKeys: String, CodingKey {
@@ -426,7 +469,28 @@ struct TrendReportRangeData: Decodable {
         case generatedAt = "generated_at"
         case generationMode = "generation_mode"
         case generationError = "generation_error"
+        case source
         case report
+    }
+}
+
+struct TrendReportRangeSourceData: Decodable {
+    let type: String?
+    let chatId: String?
+    let latestAiChatTime: String?
+    let includedUserMessageCount: Int?
+    let includedAssistantMessageCount: Int?
+    let recordedDates: [String]?
+    let evidenceCommentIds: [String]?
+
+    enum CodingKeys: String, CodingKey {
+        case type
+        case chatId = "chat_id"
+        case latestAiChatTime = "latest_ai_chat_time"
+        case includedUserMessageCount = "included_user_message_count"
+        case includedAssistantMessageCount = "included_assistant_message_count"
+        case recordedDates = "recorded_dates"
+        case evidenceCommentIds = "evidence_comment_ids"
     }
 }
 
@@ -504,7 +568,12 @@ struct TrendReportSymptomItem: Decodable, Identifiable {
 struct TrendReportCard: Decodable, Identifiable {
     let key: String
     let title: String?
+    let chartType: String?
     let description: String?
+    let metric: TrendReportMetric?
+    let summary: TrendReportCardSummary?
+    let badgeText: String?
+    let series: [TrendReportSeries]?
     let dataPoints: [TrendReportDataPoint]
 
     var id: String { key }
@@ -512,7 +581,12 @@ struct TrendReportCard: Decodable, Identifiable {
     enum CodingKeys: String, CodingKey {
         case key
         case title
+        case chartType = "chart_type"
         case description
+        case metric
+        case summary
+        case badgeText = "badge_text"
+        case series
         case dataPoints = "data_points"
     }
 }
@@ -523,6 +597,44 @@ struct TrendReportDataPoint: Decodable, Identifiable {
     let value: Double
 
     var id: String { "\(label)-\(date ?? "")" }
+}
+
+struct TrendReportMetric: Decodable {
+    let key: String?
+    let label: String?
+    let min: Double?
+    let max: Double?
+    let unit: String?
+}
+
+struct TrendReportCardSummary: Decodable {
+    let recordedDays: Int?
+    let hotFlashTotal: Int?
+    let averageSleep: Double?
+
+    enum CodingKeys: String, CodingKey {
+        case recordedDays = "recorded_days"
+        case hotFlashTotal = "hot_flash_total"
+        case averageSleep = "average_sleep"
+    }
+}
+
+struct TrendReportSeries: Decodable, Identifiable {
+    let key: String
+    let label: String
+    let icon: String?
+    let color: String?
+    let dataPoints: [TrendReportDataPoint]
+
+    var id: String { key }
+
+    enum CodingKeys: String, CodingKey {
+        case key
+        case label
+        case icon
+        case color
+        case dataPoints = "data_points"
+    }
 }
 
 struct TrendReportTriggerSection: Decodable {
@@ -744,9 +856,15 @@ enum AuthAPIError: LocalizedError {
 final class AuthAPI {
     static let shared = AuthAPI()
 
-    // For local development, point both Simulator and real devices to the Mac's LAN address.
-    // If your Wi-Fi changes and the Mac gets a new IP, update this one line.
-    var baseURL = URL(string: "http://192.168.3.70:8888")!
+    // Simulator can reach the local Tornado server through localhost.
+    // Real devices need the Mac's current LAN address.
+    var baseURL: URL = {
+        #if targetEnvironment(simulator)
+        return URL(string: "http://127.0.0.1:8888")!
+        #else
+        return URL(string: "http://10.10.10.84:8888")!
+        #endif
+    }()
 
     private init() {}
 
@@ -820,6 +938,7 @@ final class AuthAPI {
     }
 
     func recordMeditationPractice(
+        practiceId: String? = nil,
         modeKey: String,
         startedAt: String,
         endedAt: String?,
@@ -831,7 +950,7 @@ final class AuthAPI {
         try await postJSON(
             path: "/api/meditation/practice/record",
             body: MeditationPracticeRecordRequest(
-                practiceId: UUID().uuidString.replacingOccurrences(of: "-", with: "").lowercased(),
+                practiceId: practiceId ?? UUID().uuidString.replacingOccurrences(of: "-", with: "").lowercased(),
                 modeKey: modeKey,
                 startedAt: startedAt,
                 endedAt: endedAt,
@@ -853,6 +972,15 @@ final class AuthAPI {
             URLQueryItem(name: "tz_offset_minutes", value: "\(tzOffsetMinutes)"),
         ]
         return try await get(path: components.string ?? "/api/meditation/practice/summary")
+    }
+
+    func meditationPracticeList(limit: Int = 200) async throws -> MeditationPracticeListResponse {
+        var components = URLComponents()
+        components.path = "/api/meditation/practice/list"
+        components.queryItems = [
+            URLQueryItem(name: "limit", value: "\(limit)")
+        ]
+        return try await get(path: components.string ?? "/api/meditation/practice/list")
     }
 
     func loadTrendReport() async throws -> TrendReportLoadResponse {
@@ -885,11 +1013,22 @@ final class AuthAPI {
     }
 
     private func get<Response: Decodable>(path: String) async throws -> Response {
-        guard let url = URL(string: path, relativeTo: baseURL) else {
+        guard let baseRequestURL = URL(string: path, relativeTo: baseURL) else {
+            throw AuthAPIError.badURL
+        }
+        var components = URLComponents(url: baseRequestURL, resolvingAgainstBaseURL: true)
+        var queryItems = components?.queryItems ?? []
+        queryItems.append(URLQueryItem(name: "_ts", value: "\(Int(Date().timeIntervalSince1970 * 1000))"))
+        components?.queryItems = queryItems
+        guard let url = components?.url else {
             throw AuthAPIError.badURL
         }
 
-        let (data, response) = try await URLSession.shared.data(from: url)
+        var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 30)
+        request.setValue("no-cache, no-store, max-age=0", forHTTPHeaderField: "Cache-Control")
+        request.setValue("no-cache", forHTTPHeaderField: "Pragma")
+
+        let (data, response) = try await URLSession.shared.data(for: request)
         return try decodeResponse(data: data, response: response)
     }
 

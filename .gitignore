@@ -9,6 +9,12 @@ venv/
 env/
 *.log
 
+# Node / frontend
+node_modules/
+ui-prototype/node_modules/
+ui-prototype/.npm-cache/
+ui-prototype/dist/
+
 # Xcode
 DerivedData/
 *.xcuserstate

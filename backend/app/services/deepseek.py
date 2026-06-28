@@ -1,4 +1,5 @@
 import json
+import re
 
 import certifi
 from tornado.httpclient import AsyncHTTPClient, HTTPError, HTTPRequest
@@ -55,8 +56,17 @@ class DeepSeekService:
         content = str(message.get("content") or "").strip()
         if not content:
             raise DeepSeekError("DeepSeek response content is empty")
+        content = _strip_markdown_bold(content)
         return {
             "content": content,
             "model": payload.get("model") or self.model,
             "usage": payload.get("usage") or {},
         }
+
+
+def _strip_markdown_bold(content):
+    text = str(content or "")
+    text = re.sub(r"\*\*(.*?)\*\*", r"\1", text, flags=re.DOTALL)
+    text = re.sub(r"__(.*?)__", r"\1", text, flags=re.DOTALL)
+    text = text.replace("**", "").replace("__", "")
+    return text.strip()

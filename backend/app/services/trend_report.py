@@ -1,6 +1,6 @@
 import json
 import uuid
-from datetime import timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 
 from app.services.chat import _parse_comment_time, now_iso
 from app.services.entities import get_entity_body, put_entity_body
@@ -92,6 +92,7 @@ def empty_range_report(range_key):
             "latest_ai_chat_time": None,
             "included_user_message_count": 0,
             "included_assistant_message_count": 0,
+            "recorded_dates": [],
             "evidence_comment_ids": [],
         },
         "report": None,
@@ -137,6 +138,8 @@ async def ensure_trend_report_block(cur, user_entity_id):
             if range_key not in ranges:
                 ranges[range_key] = empty_range_report(range_key)
                 changed = True
+        if await _backfill_recorded_dates_for_existing_ranges(cur, user_entity_id, body):
+            changed = True
         if changed:
             body["updatetime"] = now_iso()
             await put_entity_body(cur, block_id, body)
@@ -170,6 +173,60 @@ async def ensure_trend_report_block(cur, user_entity_id):
         "user_entity_id": user_entity_id,
         "body": body,
     }
+
+
+async def _backfill_recorded_dates_for_existing_ranges(cur, user_entity_id, body, tz_offset_minutes=480):
+    ranges = body.get("ranges") or {}
+    missing = []
+    for range_key in REPORT_RANGES:
+        source = (ranges.get(range_key) or {}).get("source") or {}
+        if "recorded_dates" not in source:
+            missing.append(range_key)
+    if not missing:
+        return False
+
+    await cur.execute(
+        """
+        SELECT chat_id
+        FROM helen.chat_index
+        WHERE user_entity_id = %s
+        ORDER BY id DESC
+        LIMIT 1
+        """,
+        (user_entity_id,),
+    )
+    row = await cur.fetchone()
+    if not row:
+        changed = False
+        for range_key in missing:
+            source = (ranges.get(range_key) or {}).setdefault("source", {})
+            source["recorded_dates"] = []
+            changed = True
+        return changed
+
+    chat_id = row[0]
+    comments = await _load_all_chat_comments(cur, chat_id, tz_offset_minutes)
+    user_comments = [item for item in comments if item.get("role") == "user"]
+    changed = False
+
+    for range_key in missing:
+        range_payload = ranges.get(range_key) or {}
+        source = range_payload.setdefault("source", {})
+        start_date = _parse_iso_date(range_payload.get("start_date"))
+        end_date = _parse_iso_date(range_payload.get("anchor_date")) or _parse_iso_date(range_payload.get("end_date"))
+        if start_date is None or end_date is None:
+            source["recorded_dates"] = []
+        else:
+            source["recorded_dates"] = sorted(
+                {
+                    item["local_time"].date().isoformat()
+                    for item in user_comments
+                    if start_date <= item["local_time"].date() <= end_date
+                }
+            )
+        changed = True
+
+    return changed
 
 
 async def save_trend_report_range(cur, user_entity_id, range_key, report_payload):
@@ -214,8 +271,9 @@ async def refresh_trend_report_for_chat(cur, chat_id, tz_offset_minutes=480, dee
     if not user_comments:
         return await ensure_trend_report_block(cur, user_entity_id)
 
+    offset = timezone(timedelta(minutes=int(tz_offset_minutes or 0)))
     latest_user_comment = max(user_comments, key=lambda item: item["local_time"])
-    anchor_date = latest_user_comment["local_time"].date()
+    anchor_date = datetime.now(offset).date()
     block = await ensure_trend_report_block(cur, user_entity_id)
     body = block["body"]
     ranges = body.setdefault("ranges", {})
@@ -300,7 +358,7 @@ async def _build_ai_range_reports(deepseek_service, chat_id, anchor_date, latest
                 f"latest_ai_chat_time: {latest_user_time.isoformat()}\n"
                 "请基于以下聊天记录，生成 7d、30d、90d 三个周期的趋势摘要。\n"
                 "规则：\n"
-                "1. 周期结束日期都等于 anchor_date。\n"
+                "1. 周期结束日期都等于 anchor_date，也就是今天。\n"
                 "2. 只引用聊天中真实出现过的内容，优先使用用户消息判断症状。\n"
                 "3. 你只需要返回这些适合 AI 总结的字段：overview、possible_triggers、recommended_next_steps。\n"
                 "4. 顶层 JSON 格式必须是："
@@ -337,6 +395,15 @@ def _build_ai_transcript(comments):
     return "\n".join(lines)
 
 
+def _parse_iso_date(value):
+    if not value:
+        return None
+    try:
+        return date.fromisoformat(str(value))
+    except ValueError:
+        return None
+
+
 def _parse_ai_range_reports(content):
     text = str(content or "").strip()
     if text.startswith("```"):
@@ -367,6 +434,7 @@ def _build_range_report(chat_id, range_key, anchor_date, latest_user_time, comme
     ]
     user_comments = [item for item in scoped if item.get("role") == "user"]
     assistant_comments = [item for item in scoped if item.get("role") == "assistant"]
+    recorded_dates = sorted({item["local_time"].date().isoformat() for item in user_comments})
     symptom_items = _summarize_symptoms(user_comments)
     recorded_days = len({item["local_time"].date() for item in user_comments})
     top_labels = [item["label"] for item in symptom_items if item["count"] > 0][:2]
@@ -377,7 +445,7 @@ def _build_range_report(chat_id, range_key, anchor_date, latest_user_time, comme
         "range": range_key,
         "status": "ready",
         "anchor_date": anchor_date.isoformat(),
-        "anchor_source": "latest_ai_chat_date",
+        "anchor_source": "current_date",
         "start_date": start_date.isoformat(),
         "end_date": anchor_date.isoformat(),
         "generated_at": now_iso(),
@@ -387,6 +455,7 @@ def _build_range_report(chat_id, range_key, anchor_date, latest_user_time, comme
             "latest_ai_chat_time": latest_user_time.isoformat(),
             "included_user_message_count": len(user_comments),
             "included_assistant_message_count": len(assistant_comments),
+            "recorded_dates": recorded_dates,
             "evidence_comment_ids": [item.get("comment_id") for item in user_comments if item.get("comment_id")],
         },
         "report": {
@@ -394,7 +463,7 @@ def _build_range_report(chat_id, range_key, anchor_date, latest_user_time, comme
             "period": {
                 "active_range": range_key,
                 "anchor_date": anchor_date.isoformat(),
-                "anchor_source": "latest_ai_chat_date",
+                "anchor_source": "current_date",
                 "start_date": start_date.isoformat(),
                 "end_date": anchor_date.isoformat(),
                 "recorded_days": recorded_days,
@@ -412,7 +481,7 @@ def _build_range_report(chat_id, range_key, anchor_date, latest_user_time, comme
                 "items": symptom_items,
             },
             "trend_cards": [
-                _build_sleep_trend_card(start_date, anchor_date, user_comments),
+                _build_symptom_trend_card(start_date, anchor_date, user_comments, days),
             ],
             "possible_triggers": {
                 "title": "可能触发因素",
@@ -490,47 +559,89 @@ def _severity_from_count(count):
     return "none"
 
 
-def _build_sleep_trend_card(start_date, anchor_date, user_comments):
-    labels = ["一", "二", "三", "四", "五", "六", "日"]
-    dates = [start_date + timedelta(days=index) for index in range((anchor_date - start_date).days + 1)]
-    recent_dates = dates[-7:]
-    points = []
-    for current_date in recent_dates:
-        comments = [item for item in user_comments if item["local_time"].date() == current_date]
-        value = min(
-            sum(
-                1
+def _build_symptom_trend_card(start_date, anchor_date, user_comments, days):
+    bucket_size = 1 if days <= 7 else 7 if days <= 30 else 15
+    buckets = []
+    cursor = start_date
+    while cursor <= anchor_date:
+        bucket_end = min(cursor + timedelta(days=bucket_size - 1), anchor_date)
+        buckets.append((cursor, bucket_end))
+        cursor = bucket_end + timedelta(days=1)
+
+    sleep_rule = next((rule for rule in SYMPTOM_RULES if rule["key"] == "poor_sleep"), SYMPTOM_RULES[0])
+    hot_flash_rule = next((rule for rule in SYMPTOM_RULES if rule["key"] == "hot_flash"), SYMPTOM_RULES[2])
+
+    def build_series(rule, label, color):
+        series_points = []
+        for bucket_start, bucket_end in buckets:
+            comments = [
+                item
+                for item in user_comments
+                if bucket_start <= item["local_time"].date() <= bucket_end
+            ]
+            matched = [
+                item
                 for item in comments
-                if _comment_matches_keywords(item, SYMPTOM_RULES[0]["keywords"])
-            ),
-            5,
-        )
-        points.append(
-            {
-                "label": labels[current_date.weekday()],
-                "date": current_date.isoformat(),
-                "value": value,
-                "evidence_comment_ids": [
-                    item.get("comment_id")
-                    for item in comments
-                    if item.get("comment_id")
-                    and _comment_matches_keywords(item, SYMPTOM_RULES[0]["keywords"])
-                ],
-            }
-        )
+                if _comment_matches_keywords(item, rule["keywords"])
+            ]
+            series_points.append(
+                {
+                    "label": f"{bucket_start.month}月{bucket_start.day}日",
+                    "date": bucket_start.isoformat(),
+                    "value": len(matched),
+                    "evidence_comment_ids": [
+                        item.get("comment_id") for item in matched if item.get("comment_id")
+                    ],
+                }
+            )
+        return {
+            "key": rule["key"],
+            "label": label,
+            "icon": rule["icon"],
+            "color": color,
+            "data_points": series_points,
+        }
+
+    sleep_series = build_series(sleep_rule, "睡眠问题", "#5D8FD9")
+    hot_flash_series = build_series(hot_flash_rule, "潮热", "#D97A9D")
+
+    sleep_total = sum(point["value"] for point in sleep_series["data_points"])
+    hot_flash_total = sum(point["value"] for point in hot_flash_series["data_points"])
+    average_sleep = round(sleep_total / max(len(sleep_series["data_points"]), 1), 1)
+    comparison_text = "较上段改善 0%"
+    if len(hot_flash_series["data_points"]) >= 2:
+        midpoint = max(len(hot_flash_series["data_points"]) // 2, 1)
+        previous = sum(point["value"] for point in hot_flash_series["data_points"][:midpoint])
+        current = sum(point["value"] for point in hot_flash_series["data_points"][midpoint:])
+        if previous > 0:
+            delta = round(((previous - current) / previous) * 100)
+            direction = "改善" if delta >= 0 else "增加"
+            comparison_text = f"较上段{direction} {abs(delta)}%"
+
     return {
-        "key": "sleep_trend",
-        "title": "睡眠趋势",
-        "chart_type": "weekly_bar",
-        "description": "柱状图表示睡眠问题严重程度",
+        "key": "symptom_trend",
+        "title": "症状变化",
+        "chart_type": "multi_line",
+        "description": "按日期统计睡眠问题与潮热提及次数",
         "metric": {
-            "key": "sleep_problem_severity",
-            "label": "睡眠问题严重程度",
+            "key": "symptom_occurrences",
+            "label": "症状次数",
             "min": 0,
-            "max": 5,
-            "unit": "分",
+            "max": max(
+                [point["value"] for point in sleep_series["data_points"]]
+                + [point["value"] for point in hot_flash_series["data_points"]]
+                + [1]
+            ),
+            "unit": "次",
         },
-        "data_points": points,
+        "summary": {
+            "recorded_days": len({item["local_time"].date() for item in user_comments}),
+            "hot_flash_total": hot_flash_total,
+            "average_sleep": average_sleep,
+        },
+        "badge_text": comparison_text,
+        "series": [hot_flash_series, sleep_series],
+        "data_points": sleep_series["data_points"],
     }
 
 

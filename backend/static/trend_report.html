@@ -1,0 +1,1223 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>身体趋势测试页</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg-top: #cfe4ff;
+      --bg-bottom: #f6eef6;
+      --panel: rgba(255, 255, 255, 0.78);
+      --panel-strong: rgba(255, 255, 255, 0.9);
+      --line: rgba(255, 255, 255, 0.78);
+      --line-soft: #e6dce5;
+      --ink: #332441;
+      --muted: #766779;
+      --pink: #d7749a;
+      --pink-soft: #f2d4e2;
+      --blue: #5b8fd8;
+      --blue-soft: #d6e4fb;
+      --purple: #a973b0;
+      --shadow: 0 24px 60px rgba(100, 82, 105, 0.14);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top, rgba(255, 255, 255, 0.82), transparent 22%),
+        linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 68%, #f7eef4 100%);
+    }
+
+    button, input {
+      font: inherit;
+    }
+
+    .shell {
+      width: min(100%, 1420px);
+      margin: 0 auto;
+      padding: 28px 20px 56px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr);
+      gap: 22px;
+      align-items: start;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(20px);
+    }
+
+    .sidebar {
+      padding: 18px;
+      position: sticky;
+      top: 18px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .panel-title {
+      margin: 0 0 12px;
+      font-size: 14px;
+      font-weight: 850;
+      color: #6e6070;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-mark {
+      width: 52px;
+      height: 52px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 16px 34px rgba(100, 82, 105, 0.12);
+      color: var(--pink);
+      font-size: 22px;
+      font-weight: 900;
+    }
+
+    .brand-copy h1 {
+      margin: 0;
+      font-size: 28px;
+      line-height: 1.06;
+      font-weight: 900;
+    }
+
+    .brand-copy p {
+      margin: 7px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.45;
+    }
+
+    .lookup-form {
+      display: grid;
+      gap: 10px;
+    }
+
+    label {
+      display: block;
+      margin: 0 0 8px;
+      font-size: 13px;
+      font-weight: 800;
+      color: #6f6271;
+    }
+
+    input {
+      width: 100%;
+      height: 50px;
+      border: 1px solid #eadfe8;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.88);
+      color: var(--ink);
+      padding: 0 15px;
+      outline: none;
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    input:focus {
+      border-color: #c78fb1;
+      box-shadow: 0 0 0 4px rgba(199, 143, 177, 0.14);
+    }
+
+    .button-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    button {
+      min-height: 48px;
+      border-radius: 16px;
+      border: 1px solid #eadfe8;
+      background: rgba(255, 255, 255, 0.82);
+      color: #635666;
+      font-size: 14px;
+      font-weight: 820;
+      cursor: pointer;
+      transition: transform .14s ease, opacity .14s ease;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    button.primary {
+      border-color: #403045;
+      background: #403045;
+      color: #fff;
+    }
+
+    .hint {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+      font-weight: 640;
+    }
+
+    .summary-card {
+      padding: 14px;
+      border-radius: 20px;
+      border: 1px solid #eadfe8;
+      background: rgba(255, 255, 255, 0.64);
+    }
+
+    .summary-card h3 {
+      margin: 0 0 8px;
+      font-size: 13px;
+      color: #6f6271;
+      font-weight: 840;
+    }
+
+    .summary-card strong,
+    .summary-card code {
+      display: block;
+      line-height: 1.5;
+      word-break: break-word;
+      font-weight: 790;
+    }
+
+    .summary-card strong {
+      font-size: 15px;
+    }
+
+    .summary-card code {
+      margin-top: 4px;
+      padding: 8px 10px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.8);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 34px;
+      padding: 0 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.8);
+      border: 1px solid #eadfe8;
+      color: #706372;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .status-pill .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #a0662b;
+    }
+
+    .status-pill.ok .dot { background: #1d7b49; }
+    .status-pill.error .dot { background: #b42318; }
+
+    .page {
+      padding: 28px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .hero {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .hero h2 {
+      margin: 0;
+      font-size: clamp(34px, 4vw, 58px);
+      line-height: 1.04;
+      font-weight: 920;
+      letter-spacing: 0;
+    }
+
+    .hero p {
+      margin: 12px 0 0;
+      color: #57495b;
+      font-size: 18px;
+      line-height: 1.5;
+      font-weight: 650;
+    }
+
+    .icon-badge {
+      flex: 0 0 auto;
+      width: 76px;
+      height: 76px;
+      border-radius: 26px;
+      display: grid;
+      place-items: center;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid var(--line);
+      font-size: 28px;
+      color: var(--pink);
+    }
+
+    .range-picker {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      padding: 8px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.52);
+    }
+
+    .range-btn {
+      min-height: 58px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: #403049;
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .range-btn.active {
+      color: #fff;
+      background: linear-gradient(90deg, #a96fb0 0%, #e08aa4 100%);
+    }
+
+    .content-card {
+      padding: 26px;
+      border-radius: 28px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,0.76) 0%, rgba(255,255,255,0.66) 100%);
+      box-shadow: var(--shadow);
+    }
+
+    .card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .card-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .card-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(180deg, rgba(241, 214, 229, 0.86), rgba(226, 230, 255, 0.86));
+      color: var(--pink);
+      font-size: 22px;
+      font-weight: 900;
+      flex: 0 0 auto;
+    }
+
+    .card-title h3 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.1;
+      font-weight: 900;
+    }
+
+    .card-title p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .overview-copy {
+      margin: 10px 0 24px;
+      font-size: 17px;
+      line-height: 1.72;
+      font-weight: 760;
+      color: #47394c;
+    }
+
+    .overview-metrics {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .metric {
+      padding: 8px 8px 0 8px;
+      position: relative;
+    }
+
+    .metric:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      right: -8px;
+      top: 8px;
+      width: 1px;
+      height: 68px;
+      background: #e5dce5;
+    }
+
+    .metric-label {
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 780;
+      margin-bottom: 12px;
+    }
+
+    .metric-value {
+      display: flex;
+      align-items: flex-end;
+      gap: 4px;
+      color: var(--pink);
+      font-weight: 920;
+    }
+
+    .metric-value .num {
+      font-size: 54px;
+      line-height: 0.92;
+    }
+
+    .metric-value .unit {
+      font-size: 16px;
+      line-height: 1.3;
+      padding-bottom: 7px;
+      color: #524454;
+    }
+
+    .chart-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin: 0 0 10px;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #766779;
+      font-size: 15px;
+      font-weight: 820;
+    }
+
+    .legend-line {
+      width: 18px;
+      height: 2.5px;
+      border-radius: 999px;
+    }
+
+    .trend-meta {
+      display: grid;
+      gap: 6px;
+      margin-bottom: 18px;
+    }
+
+    .chart-axis-label {
+      color: #6f6170;
+      font-size: 15px;
+      font-weight: 850;
+      line-height: 1.2;
+    }
+
+    .chart-wrap {
+      position: relative;
+      border-radius: 24px;
+      overflow: hidden;
+      padding-top: 50px;
+    }
+
+    .chart-svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .freq-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .freq-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 92px;
+      padding: 16px 18px;
+      border-radius: 22px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.6);
+    }
+
+    .freq-item.hot {
+      background: linear-gradient(90deg, rgba(247, 223, 232, 0.86), rgba(255,255,255,0.55));
+    }
+
+    .freq-item.sleep {
+      background: linear-gradient(90deg, rgba(221, 233, 252, 0.86), rgba(255,255,255,0.55));
+    }
+
+    .freq-icon {
+      font-size: 28px;
+      width: 38px;
+      text-align: center;
+      flex: 0 0 auto;
+    }
+
+    .freq-item.hot .freq-icon { color: var(--pink); }
+    .freq-item.sleep .freq-icon { color: var(--blue); }
+
+    .freq-name {
+      flex: 1 1 auto;
+      min-width: 0;
+      font-size: 18px;
+      font-weight: 860;
+    }
+
+    .freq-count {
+      flex: 0 0 auto;
+      font-size: 18px;
+      font-weight: 900;
+      color: #524454;
+    }
+
+    .section-stack {
+      display: grid;
+      gap: 14px;
+    }
+
+    .text-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 2px 0;
+    }
+
+    .text-icon {
+      width: 30px;
+      text-align: center;
+      font-size: 20px;
+      color: #8b7890;
+      flex: 0 0 auto;
+    }
+
+    .text-main {
+      flex: 1 1 auto;
+      font-size: 17px;
+      line-height: 1.7;
+      font-weight: 760;
+      color: #4a3d4d;
+    }
+
+    .text-main.warning { color: #9f5520; }
+    .text-main.info { color: #3159a5; }
+
+    .next-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-height: 68px;
+      border-bottom: 1px solid #eadfe8;
+      padding: 8px 0;
+    }
+
+    .next-item:last-child {
+      border-bottom: 0;
+    }
+
+    .next-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background: rgba(255,255,255,0.64);
+      color: #8e78a7;
+      font-size: 19px;
+      flex: 0 0 auto;
+    }
+
+    .next-copy {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+
+    .next-copy strong {
+      display: block;
+      font-size: 18px;
+      line-height: 1.3;
+      font-weight: 860;
+    }
+
+    .next-copy span {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 740;
+      line-height: 1.45;
+    }
+
+    .chevron {
+      color: #8b7a8e;
+      font-size: 26px;
+      line-height: 1;
+      flex: 0 0 auto;
+    }
+
+    .empty,
+    .loading {
+      min-height: 320px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: #5c4f5f;
+      font-size: 18px;
+      font-weight: 760;
+      line-height: 1.65;
+      padding: 32px;
+    }
+
+    .raw-json {
+      margin-top: 4px;
+      border-radius: 22px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.65);
+      overflow: hidden;
+    }
+
+    .raw-json summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 18px 20px;
+      font-size: 15px;
+      font-weight: 860;
+      color: #4f4153;
+    }
+
+    .raw-json summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .raw-json pre {
+      margin: 0;
+      padding: 0 20px 20px;
+      overflow: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+      line-height: 1.7;
+      color: #45384a;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    @media (max-width: 1060px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: static;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .shell {
+        padding: 18px 12px 34px;
+      }
+
+      .page,
+      .content-card,
+      .sidebar {
+        padding: 18px;
+      }
+
+      .overview-metrics,
+      .freq-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .metric:not(:last-child)::after {
+        display: none;
+      }
+
+      .hero {
+        align-items: start;
+      }
+
+      .hero h2 {
+        font-size: 40px;
+      }
+
+      .icon-badge {
+        width: 62px;
+        height: 62px;
+        border-radius: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="layout">
+      <aside class="panel sidebar">
+        <div class="brand">
+          <div class="brand-mark">≈</div>
+          <div class="brand-copy">
+            <h1>身体趋势测试</h1>
+            <p>网页和 App 共用同一份趋势接口，方便你快速校验数据和展示。</p>
+          </div>
+        </div>
+
+        <div>
+          <div id="statusPill" class="status-pill">
+            <span class="dot"></span>
+            <span id="statusText">等待加载</span>
+          </div>
+        </div>
+
+        <section>
+          <h2 class="panel-title">加载条件</h2>
+          <div class="lookup-form">
+            <div>
+              <label for="mobileInput">手机号</label>
+              <input id="mobileInput" maxlength="11" placeholder="15121150684">
+            </div>
+            <div>
+              <label for="userIdInput">user_id</label>
+              <input id="userIdInput" maxlength="64" placeholder="32位 UUID，可不填">
+            </div>
+            <div class="button-row">
+              <button id="loadButton" class="primary">读取趋势</button>
+              <button id="clearButton" type="button">清空</button>
+            </div>
+            <p class="hint">优先使用 `user_id`。如果只填手机号，页面会先调用 `/api/mobile/entity` 自动换出对应用户 ID。</p>
+          </div>
+        </section>
+
+        <section class="summary-card">
+          <h3>当前用户</h3>
+          <strong id="summaryMobile">未加载</strong>
+          <code id="summaryUserId">-</code>
+        </section>
+
+        <section class="summary-card">
+          <h3>当前周期</h3>
+          <strong id="summaryRange">30天</strong>
+          <strong id="summaryDates">-</strong>
+        </section>
+
+        <section class="summary-card">
+          <h3>当前接口</h3>
+          <code>/api/trend_report/load?user_id=...</code>
+        </section>
+      </aside>
+
+      <main class="panel page">
+        <div class="hero">
+          <div>
+            <h2>身体趋势</h2>
+            <p>基于你的日常记录生成，仅供自我观察和前端联调测试。</p>
+          </div>
+          <div class="icon-badge">📅</div>
+        </div>
+
+        <div id="rangePicker" class="range-picker">
+          <button class="range-btn" data-range="7d">7天</button>
+          <button class="range-btn active" data-range="30d">30天</button>
+          <button class="range-btn" data-range="90d">90天</button>
+        </div>
+
+        <section id="reportRoot" class="loading">
+          输入手机号或 user_id，然后读取趋势。
+        </section>
+
+        <details class="raw-json">
+          <summary>查看原始 JSON</summary>
+          <pre id="rawJson">暂无数据</pre>
+        </details>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    const state = {
+      selectedRange: "30d",
+      payload: null,
+      currentUserId: "",
+      currentMobile: ""
+    };
+
+    const mobileInput = document.getElementById("mobileInput");
+    const userIdInput = document.getElementById("userIdInput");
+    const loadButton = document.getElementById("loadButton");
+    const clearButton = document.getElementById("clearButton");
+    const reportRoot = document.getElementById("reportRoot");
+    const rawJson = document.getElementById("rawJson");
+    const statusPill = document.getElementById("statusPill");
+    const statusText = document.getElementById("statusText");
+    const summaryMobile = document.getElementById("summaryMobile");
+    const summaryUserId = document.getElementById("summaryUserId");
+    const summaryRange = document.getElementById("summaryRange");
+    const summaryDates = document.getElementById("summaryDates");
+
+    const rangeLabelMap = { "7d": "7天", "30d": "30天", "90d": "90天" };
+    const iconMap = {
+      "chart.xyaxis.line": "📈",
+      "waveform.path.ecg": "📊",
+      "flame.fill": "🔥",
+      "moon.zzz.fill": "🌙",
+      "moon.fill": "🌙",
+      "bolt.fill": "⚡",
+      "xmark.circle.fill": "😮‍💨",
+      "cloud.fill": "☁️",
+      "lightbulb.fill": "💡",
+      "info": "ℹ️",
+      "wind": "〰️",
+      "cup.and.saucer.fill": "☕",
+      "cross.case.fill": "🩺",
+      "square.and.pencil": "✍️"
+    };
+
+    function setStatus(kind, text) {
+      statusPill.className = "status-pill" + (kind ? " " + kind : "");
+      statusText.textContent = text;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function iconFor(name) {
+      return iconMap[name] || "•";
+    }
+
+    function formatRangeDates(rangeData) {
+      if (!rangeData?.start_date || !rangeData?.end_date) return "-";
+      return `${rangeData.start_date} - ${rangeData.end_date}`;
+    }
+
+    function formatNumber(value, digits = 0) {
+      const number = Number(value || 0);
+      return digits > 0 ? number.toFixed(digits) : String(Math.round(number));
+    }
+
+    async function resolveUserId() {
+      const explicitUserId = userIdInput.value.trim();
+      if (explicitUserId) {
+        state.currentUserId = explicitUserId;
+        state.currentMobile = mobileInput.value.trim();
+        return explicitUserId;
+      }
+
+      const mobile = mobileInput.value.trim();
+      if (!/^\d{11}$/.test(mobile)) {
+        throw new Error("请填写 11 位手机号，或直接填写 user_id");
+      }
+
+      const response = await fetch(`/api/mobile/entity?mobile=${encodeURIComponent(mobile)}`);
+      const payload = await response.json();
+      if (!response.ok) {
+        throw new Error(payload.error || payload.message || "手机号查询失败");
+      }
+      state.currentUserId = payload.entity_id || "";
+      state.currentMobile = payload.mobile || mobile;
+      userIdInput.value = state.currentUserId;
+      return state.currentUserId;
+    }
+
+    async function loadTrendReport() {
+      try {
+        setStatus("", "正在加载");
+        reportRoot.className = "loading";
+        reportRoot.textContent = "趋势数据加载中...";
+
+        const userId = await resolveUserId();
+        const response = await fetch(`/api/trend_report/load?user_id=${encodeURIComponent(userId)}`);
+        const payload = await response.json();
+
+        if (!response.ok) {
+          throw new Error(payload.error || payload.message || "趋势接口返回失败");
+        }
+
+        state.payload = payload;
+        rawJson.textContent = JSON.stringify(payload, null, 2);
+        renderReport();
+        setStatus("ok", "已加载");
+      } catch (error) {
+        console.error(error);
+        setStatus("error", "加载失败");
+        reportRoot.className = "empty";
+        reportRoot.innerHTML = escapeHtml(error.message || "加载失败");
+      }
+    }
+
+    function selectRange(range) {
+      state.selectedRange = range;
+      document.querySelectorAll(".range-btn").forEach((button) => {
+        button.classList.toggle("active", button.dataset.range === range);
+      });
+      renderReport();
+    }
+
+    function renderReport() {
+      const ranges = state.payload?.data?.body?.ranges || {};
+      const currentRange = ranges[state.selectedRange];
+      const report = currentRange?.report;
+
+      summaryRange.textContent = rangeLabelMap[state.selectedRange] || state.selectedRange;
+      summaryDates.textContent = formatRangeDates(currentRange);
+      summaryMobile.textContent = state.currentMobile || mobileInput.value.trim() || "未提供";
+      summaryUserId.textContent = state.currentUserId || "-";
+
+      if (!report) {
+        reportRoot.className = "empty";
+        reportRoot.innerHTML = "这个周期还没有趋势内容，可以先去和 AI 聊一聊再刷新。";
+        return;
+      }
+
+      const trendCard = (report.trend_cards || []).find((item) => item.key === "symptom_trend")
+        || (report.trend_cards || [])[0]
+        || null;
+      const frequentSymptoms = report.frequent_symptoms?.items || [];
+      const triggerItems = report.possible_triggers?.items || [];
+      const nextSteps = report.recommended_next_steps?.items || [];
+      const summary = trendCard?.summary || {};
+
+      reportRoot.className = "";
+      reportRoot.innerHTML = `
+        ${renderOverviewCard(report, summary)}
+        ${renderTrendCard(trendCard)}
+        ${renderFrequentSymptomsCard(frequentSymptoms)}
+        ${renderTextSection("可能的触发因素", "💡", triggerItems, "trigger")}
+        ${renderNextSteps(nextSteps)}
+      `;
+    }
+
+    function renderOverviewCard(report, summary) {
+      return `
+        <section class="content-card">
+          <div class="card-head">
+            <div class="card-title">
+              <div class="card-icon">${iconFor(report.overview?.icon || "chart.xyaxis.line")}</div>
+              <div>
+                <h3>${escapeHtml(report.overview?.title || `${rangeLabelMap[state.selectedRange] || ""}概况`)}</h3>
+                <p>${escapeHtml(formatRangeDates(state.payload?.data?.body?.ranges?.[state.selectedRange]))}</p>
+              </div>
+            </div>
+          </div>
+          <div class="overview-copy">${escapeHtml(report.overview?.summary || "最近这一段时间的记录还在整理中。")}</div>
+          <div class="overview-metrics">
+            <div class="metric">
+              <div class="metric-label">记录</div>
+              <div class="metric-value"><span class="num">${formatNumber(summary.recorded_days || report.period?.recorded_days || 0)}</span><span class="unit">天</span></div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">潮热</div>
+              <div class="metric-value"><span class="num">${formatNumber(summary.hot_flash_total || symptomCountByKey(report.frequent_symptoms?.items, "hot_flash"))}</span><span class="unit">次</span></div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">平均睡眠</div>
+              <div class="metric-value"><span class="num">${Number(summary.average_sleep || 0).toFixed(1)}</span><span class="unit">次</span></div>
+            </div>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderTrendCard(trendCard) {
+      if (!trendCard) {
+        return `
+          <section class="content-card">
+            <div class="empty">趋势图数据暂时为空。</div>
+          </section>
+        `;
+      }
+
+      const series = trendCard.series || [];
+      const legendHtml = series.map((item) => `
+        <div class="legend-item">
+          <span class="legend-line" style="background:${escapeHtml(item.color || "#999")}"></span>
+          <span>${escapeHtml(item.label)}</span>
+        </div>
+      `).join("");
+
+      return `
+        <section class="content-card">
+          <div class="card-head">
+            <div class="card-title">
+              <div class="card-icon">${iconFor("waveform.path.ecg")}</div>
+              <div>
+                <h3>${escapeHtml(trendCard.title || "症状变化")}</h3>
+              </div>
+            </div>
+            ${trendCard.badge_text ? `<div class="status-pill"><span class="dot" style="background:${"var(--pink)"}"></span><span>${escapeHtml(trendCard.badge_text)}</span></div>` : ""}
+          </div>
+          <div class="trend-meta">
+            <div class="chart-axis-label">${escapeHtml(`${trendCard.metric?.label || "症状次数"}（${trendCard.metric?.unit || "次"}）`)}</div>
+            <div class="chart-legend">${legendHtml}</div>
+          </div>
+          <div class="chart-wrap">
+            ${buildChartSvg(trendCard)}
+          </div>
+        </section>
+      `;
+    }
+
+    function buildChartSvg(trendCard) {
+      const series = trendCard.series || [];
+      const fallbackSeries = series.length ? series : [{
+        key: "fallback",
+        label: trendCard.title || "趋势",
+        color: "#d7749a",
+        data_points: trendCard.data_points || []
+      }];
+
+      const points = fallbackSeries[0].data_points || [];
+      const width = 920;
+      const height = 360;
+      const left = 56;
+      const top = 46;
+      const right = 16;
+      const bottom = 56;
+      const plotWidth = width - left - right;
+      const plotHeight = height - top - bottom;
+      const maxValue = Math.max(Number(trendCard.metric?.max || 0), ...fallbackSeries.flatMap((item) => item.data_points || []).map((item) => Number(item.value || 0)), 1);
+      const topTick = Math.max(5, Math.ceil(maxValue / 5) * 5);
+      const ticks = [0, Math.round(topTick / 3), Math.round((topTick * 2) / 3), topTick];
+      const stepX = points.length > 1 ? plotWidth / (points.length - 1) : plotWidth / 2;
+
+      const grid = ticks.map((tick) => {
+        const y = top + plotHeight - (tick / maxValue) * plotHeight;
+        return `
+          <g>
+            <text x="0" y="${y + 5}" fill="#7b6c7d" font-size="13" font-weight="800">${tick}</text>
+            <line x1="${left}" y1="${y}" x2="${width - right}" y2="${y}" stroke="${tick === 0 ? '#d8cfd9' : '#e5dce7'}" stroke-width="${tick === 0 ? '1.2' : '1'}" stroke-dasharray="${tick === 0 ? '' : '4 7'}"></line>
+          </g>
+        `;
+      }).join("");
+
+      const paths = fallbackSeries.map((item) => {
+        const dataPoints = item.data_points || [];
+        const coords = dataPoints.map((point, index) => {
+          const x = left + (dataPoints.length > 1 ? index * stepX : plotWidth / 2);
+          const y = top + plotHeight - (Number(point.value || 0) / maxValue) * plotHeight;
+          return {x, y};
+        });
+
+        const d = buildSmoothPath(coords);
+
+        const circles = dataPoints.map((point, index) => {
+          const x = coords[index]?.x ?? left;
+          const y = coords[index]?.y ?? top + plotHeight;
+          return `
+            <circle cx="${x}" cy="${y}" r="6.5" fill="${escapeHtml(item.color || '#d7749a')}" stroke="rgba(255,255,255,0.96)" stroke-width="2.4"></circle>
+          `;
+        }).join("");
+
+        return `
+          <path d="${d}" fill="none" stroke="${escapeHtml(item.color || '#d7749a')}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></path>
+          ${circles}
+        `;
+      }).join("");
+
+      const labels = points.map((point, index) => {
+        const x = left + (points.length > 1 ? index * stepX : plotWidth / 2);
+        const hidden = points.length >= 5 && index === points.length - 2;
+        return `
+          <text x="${x}" y="${height - 12}" text-anchor="middle" fill="#615161" font-size="14" font-weight="800" opacity="${hidden ? 0 : 1}">${escapeHtml(point.label || "")}</text>
+        `;
+      }).join("");
+
+      return `
+        <svg class="chart-svg" viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid meet" aria-label="趋势图">
+          ${grid}
+          ${paths}
+          ${labels}
+        </svg>
+      `;
+    }
+
+    function buildSmoothPath(points) {
+      if (!points.length) return "";
+      if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
+      if (points.length === 2) return `M ${points[0].x} ${points[0].y} L ${points[1].x} ${points[1].y}`;
+
+      let d = `M ${points[0].x} ${points[0].y}`;
+
+      for (let i = 0; i < points.length - 1; i += 1) {
+        const current = points[i];
+        const next = points[i + 1];
+        const midX = (current.x + next.x) / 2;
+        const midY = (current.y + next.y) / 2;
+
+        if (i === 0) {
+          d += ` Q ${current.x} ${current.y} ${midX} ${midY}`;
+        } else {
+          d += ` T ${midX} ${midY}`;
+        }
+
+        if (i === points.length - 2) {
+          d += ` T ${next.x} ${next.y}`;
+        }
+      }
+
+      return d;
+    }
+
+    function renderFrequentSymptomsCard(items) {
+      if (!items.length) {
+        return "";
+      }
+      const normalized = items.slice(0, 4).map((item) => {
+        const type = item.key === "hot_flash" ? "hot" : item.key === "poor_sleep" ? "sleep" : "";
+        return `
+          <div class="freq-item ${type}">
+            <div class="freq-icon">${iconFor(item.icon)}</div>
+            <div class="freq-name">${escapeHtml(item.label)}</div>
+            <div class="freq-count">${formatNumber(item.count)}次</div>
+          </div>
+        `;
+      }).join("");
+
+      return `
+        <section class="content-card">
+          <div class="card-head">
+            <div class="card-title">
+              <div class="card-icon">${iconFor("flame.fill")}</div>
+              <div><h3>高频症状</h3></div>
+            </div>
+          </div>
+          <div class="freq-grid">${normalized}</div>
+        </section>
+      `;
+    }
+
+    function renderTextSection(title, icon, items, type) {
+      if (!items.length) {
+        return "";
+      }
+
+      const rows = items.map((item) => {
+        const styleClass = item.style === "warning" ? "warning" : item.style === "info" ? "info" : "";
+        return `
+          <div class="text-row">
+            <div class="text-icon">${iconFor(item.icon) || icon}</div>
+            <div class="text-main ${styleClass}">${escapeHtml(item.text || "")}</div>
+          </div>
+        `;
+      }).join("");
+
+      return `
+        <section class="content-card">
+          <div class="card-head">
+            <div class="card-title">
+              <div class="card-icon">${icon}</div>
+              <div><h3>${escapeHtml(title)}</h3></div>
+            </div>
+          </div>
+          <div class="section-stack">${rows}</div>
+        </section>
+      `;
+    }
+
+    function renderNextSteps(items) {
+      if (!items.length) {
+        return "";
+      }
+
+      const rows = items.map((item) => `
+        <div class="next-item">
+          <div class="next-icon">${iconFor(item.icon)}</div>
+          <div class="next-copy">
+            <strong>${escapeHtml(item.title)}</strong>
+            <span>${escapeHtml(item.desc || "")}</span>
+          </div>
+          <div class="chevron">›</div>
+        </div>
+      `).join("");
+
+      return `
+        <section class="content-card">
+          <div class="card-head">
+            <div class="card-title">
+              <div class="card-icon">✓</div>
+              <div><h3>推荐下一步</h3></div>
+            </div>
+          </div>
+          <div>${rows}</div>
+        </section>
+      `;
+    }
+
+    function symptomCountByKey(items, key) {
+      const found = (items || []).find((item) => item.key === key);
+      return found ? Number(found.count || 0) : 0;
+    }
+
+    loadButton.addEventListener("click", loadTrendReport);
+
+    clearButton.addEventListener("click", () => {
+      mobileInput.value = "";
+      userIdInput.value = "";
+      state.payload = null;
+      state.currentUserId = "";
+      state.currentMobile = "";
+      rawJson.textContent = "暂无数据";
+      summaryMobile.textContent = "未加载";
+      summaryUserId.textContent = "-";
+      summaryDates.textContent = "-";
+      setStatus("", "等待加载");
+      reportRoot.className = "loading";
+      reportRoot.textContent = "输入手机号或 user_id，然后读取趋势。";
+    });
+
+    document.querySelectorAll(".range-btn").forEach((button) => {
+      button.addEventListener("click", () => selectRange(button.dataset.range));
+    });
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("mobile")) {
+      mobileInput.value = params.get("mobile");
+    }
+    if (params.get("user_id")) {
+      userIdInput.value = params.get("user_id");
+    }
+    if (params.get("range") && rangeLabelMap[params.get("range")]) {
+      selectRange(params.get("range"));
+    }
+    if (mobileInput.value || userIdInput.value) {
+      loadTrendReport();
+    }
+  </script>
+</body>
+</html>

@@ -3,6 +3,7 @@ import tornado.web
 from app.handlers.chat import ChatBaseHandler
 from app.services.meditation import (
     build_practice_symptom_correlation,
+    ensure_meditation_block,
     load_meditation_activity,
     load_meditation_records,
     record_meditation_practice,
@@ -37,6 +38,7 @@ class MeditationPracticeListHandler(ChatBaseHandler):
 
         async with self.mysql.acquire() as conn:
             async with conn.cursor() as cur:
+                await ensure_meditation_block(cur, user_entity_id)
                 data = await load_meditation_records(cur, user_entity_id, max(1, min(limit, 200)))
         self.write_json({"data": data})
 
@@ -58,6 +60,7 @@ class MeditationPracticeSummaryHandler(ChatBaseHandler):
 
         async with self.mysql.acquire() as conn:
             async with conn.cursor() as cur:
+                await ensure_meditation_block(cur, user_entity_id)
                 data = await load_meditation_activity(cur, user_entity_id, year, month, tz_offset_minutes)
         self.write_json({"data": data})
 

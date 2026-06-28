@@ -1,0 +1,733 @@
+{
+  "updated_at": "2026-06-28T09:30:29.021025+00:00",
+  "users": {
+    "996fd171002742a881e19371570234b0": {
+      "user_entity_id": "996fd171002742a881e19371570234b0",
+      "total_practice_count": 61,
+      "total_duration_seconds": 15576,
+      "latest_started_at": "2026-06-28T09:26:10+00:00",
+      "dates": [
+        {
+          "date": "2026-06-28",
+          "practice_count": 15,
+          "total_duration_seconds": 2053,
+          "sessions": [
+            {
+              "practice_id": "70b0d272151d4b75bdd23916892785de",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-28T05:33:18+00:00",
+              "ended_at": "2026-06-28T05:33:27+00:00",
+              "duration_seconds": 8,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "d4f9c92ae8cd41058d7e63f407b781b0",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-28T05:33:23+00:00",
+              "ended_at": "2026-06-28T05:35:51+00:00",
+              "duration_seconds": 148,
+              "cycle_count": 8,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "5ce5d1fa5c9c4e289b000ae082899889",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-28T05:37:02+00:00",
+              "ended_at": "2026-06-28T05:37:04+00:00",
+              "duration_seconds": 2,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "97f0d0f373334ed891f619311299a892",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-28T05:37:04+00:00",
+              "ended_at": "2026-06-28T05:40:16+00:00",
+              "duration_seconds": 192,
+              "cycle_count": 10,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "0720747c1b6f45b2b3ff8c1b775f553f",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-28T06:40:56+00:00",
+              "ended_at": "2026-06-28T06:40:58+00:00",
+              "duration_seconds": 2,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "b213022448a54b2788c77c1afee3c9bf",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-28T06:40:58+00:00",
+              "ended_at": "2026-06-28T06:41:10+00:00",
+              "duration_seconds": 12,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "9e2fd2d38b104a528331a4442ff343dc",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-28T06:42:16+00:00",
+              "ended_at": "2026-06-28T06:42:18+00:00",
+              "duration_seconds": 2,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "f61020539360442bb1c66a90b15e09f7",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-28T06:42:18+00:00",
+              "ended_at": "2026-06-28T06:42:27+00:00",
+              "duration_seconds": 10,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "930c0710fe2a4398b16cad6106b05aa8",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-28T06:42:27+00:00",
+              "ended_at": "2026-06-28T06:54:39+00:00",
+              "duration_seconds": 732,
+              "cycle_count": 39,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "e9b8d9b030b143ddae21ac5e485c60a0",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-28T09:10:46+00:00",
+              "ended_at": "2026-06-28T09:10:48+00:00",
+              "duration_seconds": 2,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "2832cd47379b498987fccce3fb2b0579",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-28T09:10:48+00:00",
+              "ended_at": "2026-06-28T09:14:56+00:00",
+              "duration_seconds": 248,
+              "cycle_count": 13,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "e92be9a2c6b04b9386a50b0e7cf63efb",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-28T09:17:56+00:00",
+              "ended_at": "2026-06-28T09:18:01+00:00",
+              "duration_seconds": 5,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "a642836c8050474691fe60947b9755a1",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-28T09:18:01+00:00",
+              "ended_at": "2026-06-28T09:25:11+00:00",
+              "duration_seconds": 430,
+              "cycle_count": 23,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "7be9ad066f27459cb7cf4a871911dd30",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-28T09:26:08+00:00",
+              "ended_at": "2026-06-28T09:26:10+00:00",
+              "duration_seconds": 2,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "650cb5be89e14b55a1e70c0d957199f3",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-28T09:26:10+00:00",
+              "ended_at": "2026-06-28T09:30:28+00:00",
+              "duration_seconds": 258,
+              "cycle_count": 14,
+              "completed": true,
+              "source": "ios"
+            }
+          ]
+        },
+        {
+          "date": "2026-06-26",
+          "practice_count": 2,
+          "total_duration_seconds": 17,
+          "sessions": [
+            {
+              "practice_id": "b850066dc1f6459681b0ec2f83b42900",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-26T02:25:37+00:00",
+              "ended_at": "2026-06-26T02:25:50+00:00",
+              "duration_seconds": 13,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "65b9ef33407f4504b47ec9f4bfb67ff7",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-26T02:25:50+00:00",
+              "ended_at": "2026-06-26T02:25:54+00:00",
+              "duration_seconds": 4,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            }
+          ]
+        },
+        {
+          "date": "2026-06-25",
+          "practice_count": 4,
+          "total_duration_seconds": 48,
+          "sessions": [
+            {
+              "practice_id": "491718ff815b43cdb6d315344088cdbd",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-25T13:40:16+00:00",
+              "ended_at": "2026-06-25T13:40:24+00:00",
+              "duration_seconds": 8,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "97d87b00ef4844a5baa9515f4972f886",
+              "mode_key": "hot_flash",
+              "mode_label": "缓解潮热",
+              "started_at": "2026-06-25T13:40:24+00:00",
+              "ended_at": "2026-06-25T13:40:35+00:00",
+              "duration_seconds": 8,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "634f5f5186404edea6e604080eba0a0a",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-25T14:18:11+00:00",
+              "ended_at": "2026-06-25T14:18:15+00:00",
+              "duration_seconds": 4,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "a6aa041e384c461ca75b5064871e3d5c",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-25T14:18:15+00:00",
+              "ended_at": "2026-06-25T14:18:43+00:00",
+              "duration_seconds": 28,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            }
+          ]
+        },
+        {
+          "date": "2026-06-24",
+          "practice_count": 7,
+          "total_duration_seconds": 4194,
+          "sessions": [
+            {
+              "practice_id": "83a53bc93ba441d7986ea01ea7d26a9e",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-24T02:24:48+00:00",
+              "ended_at": "2026-06-24T02:25:13+00:00",
+              "duration_seconds": 20,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "0767f0e0cc6d4a138d42a28f66e5e8e5",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-24T04:15:50+00:00",
+              "ended_at": "2026-06-24T04:15:53+00:00",
+              "duration_seconds": 3,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "1e6c272f281043c78b4d3e12612c14c8",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-24T04:15:53+00:00",
+              "ended_at": "2026-06-24T04:19:30+00:00",
+              "duration_seconds": 211,
+              "cycle_count": 11,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "5643c672d7f4498d94ffecd6d95fc3eb",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-24T04:21:16+00:00",
+              "ended_at": "2026-06-24T04:21:18+00:00",
+              "duration_seconds": 2,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "b174811261ab42909de379f7f7a96a6f",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-24T04:21:18+00:00",
+              "ended_at": "2026-06-24T05:26:59+00:00",
+              "duration_seconds": 3942,
+              "cycle_count": 207,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "d40c1ef06a8949bbae970bb48b1fe787",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-24T05:43:13+00:00",
+              "ended_at": "2026-06-24T05:43:15+00:00",
+              "duration_seconds": 2,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "a544637cd2c54075944cd86480f5ba31",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-24T05:43:15+00:00",
+              "ended_at": "2026-06-24T05:43:29+00:00",
+              "duration_seconds": 14,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            }
+          ]
+        },
+        {
+          "date": "2026-06-23",
+          "practice_count": 1,
+          "total_duration_seconds": 11,
+          "sessions": [
+            {
+              "practice_id": "82cbbd3bc4964b2e8b199cb1768c37a0",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-23T10:08:06+00:00",
+              "ended_at": "2026-06-23T10:08:17+00:00",
+              "duration_seconds": 11,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "validation"
+            }
+          ]
+        },
+        {
+          "date": "2026-06-18",
+          "practice_count": 30,
+          "total_duration_seconds": 8537,
+          "sessions": [
+            {
+              "practice_id": "e70f391e63b4429b8100a0a03d5be131",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-18T12:05:39+00:00",
+              "ended_at": "2026-06-18T12:05:46+00:00",
+              "duration_seconds": 7,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "de21b152fd46493c9f125bca053ac1f8",
+              "mode_key": "mood",
+              "mode_label": "舒缓心情",
+              "started_at": "2026-06-18T12:05:46+00:00",
+              "ended_at": "2026-06-18T12:05:49+00:00",
+              "duration_seconds": 3,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "6a5914ba59474b80b9d4a3dbd4be9198",
+              "mode_key": "hot_flash",
+              "mode_label": "缓解潮热",
+              "started_at": "2026-06-18T12:05:49+00:00",
+              "ended_at": "2026-06-18T12:05:54+00:00",
+              "duration_seconds": 5,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "36cab430b53b4605a285accf98ce6ea6",
+              "mode_key": "mood",
+              "mode_label": "舒缓心情",
+              "started_at": "2026-06-18T12:05:55+00:00",
+              "ended_at": "2026-06-18T12:05:57+00:00",
+              "duration_seconds": 2,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "138d31f2914a45a3bdb6690c843175b8",
+              "mode_key": "hot_flash",
+              "mode_label": "缓解潮热",
+              "started_at": "2026-06-18T12:05:57+00:00",
+              "ended_at": "2026-06-18T12:06:07+00:00",
+              "duration_seconds": 10,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "3df13b0679504866b530f2973e10832d",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-18T12:06:07+00:00",
+              "ended_at": "2026-06-18T12:06:09+00:00",
+              "duration_seconds": 2,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "85c86202a78f4caeb547530a6b7fa0c4",
+              "mode_key": "mood",
+              "mode_label": "舒缓心情",
+              "started_at": "2026-06-18T12:06:09+00:00",
+              "ended_at": "2026-06-18T12:06:11+00:00",
+              "duration_seconds": 2,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "b375c6f2fcd3410b895988864bea1de1",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-18T12:06:11+00:00",
+              "ended_at": "2026-06-18T12:08:43+00:00",
+              "duration_seconds": 152,
+              "cycle_count": 8,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "5026826d979b4486a87e7f8fdf051803",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-18T12:25:29+00:00",
+              "ended_at": "2026-06-18T12:25:39+00:00",
+              "duration_seconds": 10,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "3fde96244b644e26a65ecc5625bb8c43",
+              "mode_key": "hot_flash",
+              "mode_label": "缓解潮热",
+              "started_at": "2026-06-18T12:25:37+00:00",
+              "ended_at": "2026-06-18T12:25:49+00:00",
+              "duration_seconds": 12,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "811426471135428c822759482d216815",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-18T12:28:32+00:00",
+              "ended_at": "2026-06-18T12:28:43+00:00",
+              "duration_seconds": 11,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "7af7567dde2c493198701c5bab4848e8",
+              "mode_key": "hot_flash",
+              "mode_label": "缓解潮热",
+              "started_at": "2026-06-18T12:28:43+00:00",
+              "ended_at": "2026-06-18T12:28:49+00:00",
+              "duration_seconds": 6,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "dc6a023558e54456b9218cb8161de72e",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-18T12:28:49+00:00",
+              "ended_at": "2026-06-18T12:28:53+00:00",
+              "duration_seconds": 4,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "c031f6abb43646c5ba95fadd159c4411",
+              "mode_key": "mood",
+              "mode_label": "舒缓心情",
+              "started_at": "2026-06-18T12:28:53+00:00",
+              "ended_at": "2026-06-18T12:32:17+00:00",
+              "duration_seconds": 204,
+              "cycle_count": 20,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "a167d14d0d2c48868d1adb8586194b54",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-18T12:33:25+00:00",
+              "ended_at": "2026-06-18T12:33:31+00:00",
+              "duration_seconds": 6,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "f9efd6a2a8bd4a9b8e8287c2d90b13e1",
+              "mode_key": "mood",
+              "mode_label": "舒缓心情",
+              "started_at": "2026-06-18T12:33:31+00:00",
+              "ended_at": "2026-06-18T12:33:34+00:00",
+              "duration_seconds": 3,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "eef6bde15d3c46d3b80bee9e5067d794",
+              "mode_key": "hot_flash",
+              "mode_label": "缓解潮热",
+              "started_at": "2026-06-18T12:33:34+00:00",
+              "ended_at": "2026-06-18T12:38:12+00:00",
+              "duration_seconds": 278,
+              "cycle_count": 28,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "4d8d49e25e824813a3643a04d34e1872",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-18T12:39:26+00:00",
+              "ended_at": "2026-06-18T12:39:32+00:00",
+              "duration_seconds": 6,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "0273dceaee8046a2a2d5a2aabd350ad7",
+              "mode_key": "hot_flash",
+              "mode_label": "缓解潮热",
+              "started_at": "2026-06-18T12:39:32+00:00",
+              "ended_at": "2026-06-18T12:39:36+00:00",
+              "duration_seconds": 4,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "ef2860d5dd924d8589f6280cc4061a0f",
+              "mode_key": "mood",
+              "mode_label": "舒缓心情",
+              "started_at": "2026-06-18T12:39:36+00:00",
+              "ended_at": "2026-06-18T12:42:24+00:00",
+              "duration_seconds": 168,
+              "cycle_count": 17,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "90ef1117d71f4684b32ef8e507ecd3df",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-18T12:43:00+00:00",
+              "ended_at": "2026-06-18T12:43:06+00:00",
+              "duration_seconds": 5,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "7af588a4068e4dcf84b89bf3f1988554",
+              "mode_key": "mood",
+              "mode_label": "舒缓心情",
+              "started_at": "2026-06-18T12:43:06+00:00",
+              "ended_at": "2026-06-18T12:43:10+00:00",
+              "duration_seconds": 4,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "ccca4f7ff022478280fcb5768dbb746f",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-18T12:43:10+00:00",
+              "ended_at": "2026-06-18T12:45:48+00:00",
+              "duration_seconds": 158,
+              "cycle_count": 8,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "70663e70cc2347ddbd04f715bba14b9d",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-18T12:48:36+00:00",
+              "ended_at": "2026-06-18T12:48:42+00:00",
+              "duration_seconds": 5,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "7d2ee9cec4274e79b3a8428083af52e6",
+              "mode_key": "mood",
+              "mode_label": "舒缓心情",
+              "started_at": "2026-06-18T12:48:42+00:00",
+              "ended_at": "2026-06-18T12:48:44+00:00",
+              "duration_seconds": 2,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "37ad11d9077f4a6fa8b668d467538f43",
+              "mode_key": "hot_flash",
+              "mode_label": "缓解潮热",
+              "started_at": "2026-06-18T12:48:45+00:00",
+              "ended_at": "2026-06-18T12:48:49+00:00",
+              "duration_seconds": 4,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "601d57cd26f8457ba8fd4ea483a3e4c3",
+              "mode_key": "hot_flash",
+              "mode_label": "缓解潮热",
+              "started_at": "2026-06-18T12:48:49+00:00",
+              "ended_at": "2026-06-18T12:52:07+00:00",
+              "duration_seconds": 198,
+              "cycle_count": 20,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "af6018f302a147ad942e8ca3c3bf6483",
+              "mode_key": "hot_flash",
+              "mode_label": "缓解潮热",
+              "started_at": "2026-06-18T12:52:07+00:00",
+              "ended_at": "2026-06-18T12:57:09+00:00",
+              "duration_seconds": 302,
+              "cycle_count": 30,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "85d28d58875848b487e751f914e45e89",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-18T12:57:56+00:00",
+              "ended_at": "2026-06-18T12:58:00+00:00",
+              "duration_seconds": 4,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "51b93cb33ede4f2d9a7ebf4ece85a605",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-18T12:58:00+00:00",
+              "ended_at": "2026-06-18T14:54:00+00:00",
+              "duration_seconds": 6960,
+              "cycle_count": 366,
+              "completed": true,
+              "source": "ios"
+            }
+          ]
+        },
+        {
+          "date": "2026-06-14",
+          "practice_count": 2,
+          "total_duration_seconds": 716,
+          "sessions": [
+            {
+              "practice_id": "f95c70ef25164e69b88347272b3c56fb",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-14T05:17:03+00:00",
+              "ended_at": "2026-06-14T05:17:30+00:00",
+              "duration_seconds": 27,
+              "cycle_count": 1,
+              "completed": true,
+              "source": "ios"
+            },
+            {
+              "practice_id": "be478f3e276047a5b4bf020ff8fe6817",
+              "mode_key": "sleep",
+              "mode_label": "助眠安睡",
+              "started_at": "2026-06-14T05:17:30+00:00",
+              "ended_at": "2026-06-14T05:28:59+00:00",
+              "duration_seconds": 689,
+              "cycle_count": 36,
+              "completed": true,
+              "source": "ios"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

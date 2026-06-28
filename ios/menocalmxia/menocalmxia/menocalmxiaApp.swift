@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 import UserNotifications
 
 final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
@@ -13,6 +14,15 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
+        let tabBarAppearance = UITabBarAppearance()
+        tabBarAppearance.configureWithTransparentBackground()
+        tabBarAppearance.backgroundEffect = nil
+        tabBarAppearance.backgroundColor = .clear
+        tabBarAppearance.shadowColor = .clear
+        tabBarAppearance.shadowImage = UIImage()
+        UITabBar.appearance().standardAppearance = tabBarAppearance
+        UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
+
         ReminderNotificationManager.configureDelegate(self)
         Task {
             let status = await ReminderNotificationManager.authorizationStatus()

@@ -170,6 +170,18 @@ CREATE TABLE IF NOT EXISTS helen.meditation_practice_records (
   KEY idx_meditation_user_mode_started (user_entity_id, mode_key, started_at_utc)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS helen.meditation_blocks (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  user_entity_id CHAR(32) NOT NULL,
+  block_id CHAR(32) NOT NULL,
+  createtime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updatetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_meditation_blocks_user_entity_id (user_entity_id),
+  UNIQUE KEY uq_meditation_blocks_block_id (block_id),
+  KEY idx_meditation_blocks_updatetime (updatetime)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS helen.knowledge_items (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   knowledge_id CHAR(32) NOT NULL,
