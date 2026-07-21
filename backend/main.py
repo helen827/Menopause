@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from pathlib import Path
 
 import tornado.httpserver
 import tornado.ioloop
@@ -8,7 +9,7 @@ import tornado.web
 from app.config import get_settings
 from app.db import close_mysql_pool, create_mysql_pool
 from app.handlers.app_blocks import DailyQuoteHandler
-from app.handlers.auth import CheckLoginHandler, LoginHandler, SendCodeHandler
+from app.handlers.auth import AccountDeletionHandler, CheckLoginHandler, LoginHandler, SendCodeHandler
 from app.handlers.chat import (
     ChatActivityHandler,
     ChatEnsureHandler,
@@ -31,10 +32,14 @@ from app.handlers.knowledge import (
 )
 from app.handlers.mobile_entity import MobileEntityHandler
 from app.handlers.pages import (
+    AiHealthDisclaimerPageHandler,
     ChatPageHandler,
     DailyQuotePageHandler,
+    DataDeletionPageHandler,
     LoginPageHandler,
     MobileChatLookupPageHandler,
+    PrivacyPolicyPageHandler,
+    TermsPageHandler,
     TrendReportPageHandler,
 )
 from app.handlers.meditation import (
@@ -51,6 +56,7 @@ from app.handlers.trend_report import (
     TrendReportSaveHandler,
 )
 from app.handlers.users import UsersHandler
+from app.services.security import SecurityGuard
 
 
 def make_app(mysql_pool):
@@ -61,6 +67,13 @@ def make_app(mysql_pool):
             (r"/", LoginPageHandler),
             (r"/login", LoginPageHandler),
             (r"/chat", ChatPageHandler),
+            (r"/privacy", PrivacyPolicyPageHandler),
+            (r"/privacy-policy", PrivacyPolicyPageHandler),
+            (r"/terms", TermsPageHandler),
+            (r"/user-agreement", TermsPageHandler),
+            (r"/data-deletion", DataDeletionPageHandler),
+            (r"/consent-withdrawal", DataDeletionPageHandler),
+            (r"/ai-health-disclaimer", AiHealthDisclaimerPageHandler),
             (r"/daily_quote", DailyQuotePageHandler),
             (r"/mobile_chat_lookup", MobileChatLookupPageHandler),
             (r"/trend_report", TrendReportPageHandler),
@@ -72,6 +85,7 @@ def make_app(mysql_pool):
             (r"/api/send_code", SendCodeHandler),
             (r"/api/login", LoginHandler),
             (r"/api/check_login", CheckLoginHandler),
+            (r"/api/account", AccountDeletionHandler),
             (r"/api/app/daily_quote", DailyQuoteHandler),
             (r"/api/chat/ensure", ChatEnsureHandler),
             (r"/api/chat/load", ChatLoadHandler),
@@ -99,6 +113,8 @@ def make_app(mysql_pool):
         mysql_pool=mysql_pool,
         cookie_secret=settings.cookie_secret,
         debug=settings.debug,
+        static_path=str(Path(__file__).resolve().parent / "static"),
+        security_guard=SecurityGuard(settings),
     )
 
 
@@ -111,9 +127,9 @@ async def main():
 
     mysql_pool = await create_mysql_pool(settings)
     app = make_app(mysql_pool)
-    server = tornado.httpserver.HTTPServer(app)
-    server.listen(settings.app_port)
-    logging.info("Tornado server listening on http://127.0.0.1:%s", settings.app_port)
+    server = tornado.httpserver.HTTPServer(app, xheaders=True)
+    server.listen(settings.app_port, address=settings.app_host)
+    logging.info("Tornado server listening on http://%s:%s", settings.app_host, settings.app_port)
 
     shutdown_event = asyncio.Event()
     try:

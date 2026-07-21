@@ -514,6 +514,19 @@ def _write_meditation_records_json_for_user(user_entity_id, records):
     temp_path.replace(MEDITATION_RECORDS_FILE)
 
 
+def delete_meditation_records_json_for_user(user_entity_id):
+    data = _load_meditation_records_json()
+    users = data.setdefault("users", {})
+    users.pop(user_entity_id, None)
+    data["updated_at"] = now_iso()
+
+    MEDITATION_RECORDS_FILE.parent.mkdir(parents=True, exist_ok=True)
+    temp_path = MEDITATION_RECORDS_FILE.with_suffix(".tmp")
+    with temp_path.open("w", encoding="utf-8") as fp:
+        json.dump(data, fp, ensure_ascii=False, indent=2)
+    temp_path.replace(MEDITATION_RECORDS_FILE)
+
+
 async def build_practice_symptom_correlation(cur, user_entity_id, days=30, tz_offset_minutes=0):
     days = max(7, min(int(days or 30), 180))
     offset = timezone(timedelta(minutes=int(tz_offset_minutes or 0)))

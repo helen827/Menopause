@@ -94,6 +94,42 @@ button:focus-visible { outline: 3px solid rgba(215, 127, 142, .42); outline-offs
 .section-title { position: relative; z-index: 3; display: flex; align-items: center; gap: 11px; }
 .section-title h2 { margin: 0; font-size: 20px; line-height: 1.2; letter-spacing: -.3px; }
 .icon-glass { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; color: #cb7287; }
+.medical-notice {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: -8px 0 14px;
+  padding: 13px 15px;
+  color: #565469;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,.72);
+  background: rgba(246,248,251,.54);
+  box-shadow: inset 1px 1px rgba(255,255,255,.72), 0 8px 20px rgba(55,56,91,.08);
+  backdrop-filter: blur(20px) saturate(118%);
+  -webkit-backdrop-filter: blur(20px) saturate(118%);
+}
+.medical-notice .icon-glass {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  color: #b96379;
+  background: rgba(255,255,255,.58);
+}
+.medical-notice p {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 610;
+  line-height: 1.55;
+}
+.medical-notice b {
+  display: block;
+  margin-bottom: 2px;
+  color: #444153;
+  font-size: 13px;
+  font-weight: 820;
+}
 .summary-copy { position: relative; z-index: 3; margin: 15px 0 20px; font-size: 16px; font-weight: 610; }
 .metrics { position: relative; z-index: 3; display: grid; grid-template-columns: repeat(3, 1fr); }
 .metrics > div { display: grid; gap: 5px; padding-left: 13px; border-left: 1px solid rgba(100,71,81,.14); }

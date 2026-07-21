@@ -32,6 +32,26 @@ async def put_entity_body(cur, entity_id, body):
     )
 
 
+async def delete_entity_bodies(cur, entity_ids):
+    ids_by_database = {}
+    for entity_id in {str(item).strip().lower() for item in entity_ids if item}:
+        if len(entity_id) == 32:
+            ids_by_database.setdefault(database_for_entity_id(entity_id), []).append(entity_id)
+
+    deleted = 0
+    for database, ids in ids_by_database.items():
+        placeholders = ", ".join(["%s"] * len(ids))
+        await cur.execute(
+            f"""
+            DELETE FROM {database}.entities
+            WHERE entity_id IN ({placeholders})
+            """,
+            ids,
+        )
+        deleted += cur.rowcount
+    return deleted
+
+
 async def get_or_create_mobile_entity(cur, mobile):
     login = build_mobile_login(mobile)
     await cur.execute(

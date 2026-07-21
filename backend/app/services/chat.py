@@ -68,6 +68,20 @@ async def ensure_chat(cur, user_entity_id):
     }
 
 
+async def get_chat_owner(cur, chat_id):
+    await cur.execute(
+        """
+        SELECT user_entity_id
+        FROM helen.chat_index
+        WHERE chat_id = %s
+        LIMIT 1
+        """,
+        (chat_id,),
+    )
+    row = await cur.fetchone()
+    return row[0] if row else None
+
+
 async def append_chat_comment(cur, chat_id, comment):
     await cur.execute(
         """

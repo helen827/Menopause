@@ -17,6 +17,10 @@ python main.py
 
 - `GET http://127.0.0.1:8888/login`
 - `GET http://127.0.0.1:8888/chat`
+- `GET http://127.0.0.1:8888/privacy`，隐私政策 URL
+- `GET http://127.0.0.1:8888/terms`，用户协议 URL
+- `GET http://127.0.0.1:8888/data-deletion`，数据删除/撤回同意说明
+- `GET http://127.0.0.1:8888/ai-health-disclaimer`，AI/健康建议免责声明
 - `GET http://127.0.0.1:8888/daily_quote`
 - `GET http://127.0.0.1:8888/health`
 - `GET http://127.0.0.1:8888/api/users`
@@ -97,6 +101,20 @@ DEEPSEEK_MAX_TOKENS=1200
 `/api/chat/submit` 默认会调用 DeepSeek：先存用户消息，再用当前 chat 的 system prompt 和最近消息构造上下文，最后把 assistant 回复也存回同一个 chat。需要只存用户消息时，可以传 `{"ask_ai": false}`。每次提交聊天后，接口也会自动刷新当前用户的身体变化趋势 block，把 `7d`、`30d`、`90d` 三个周期的概况、高频症状、睡眠趋势、可能触发因素和推荐下一步写入 `trend_report_blocks` 对应的实体 body。
 
 如果知识库里有启用的条目，`/api/chat/submit` 会用用户本次问题检索知识库，并把命中的参考内容作为后台 system message 注入给 DeepSeek。知识库内容不会直接显示在用户聊天气泡里，但会跟 assistant 消息一起保存为 `knowledge_refs`，方便之后排查回答依据。
+
+## 反恶意使用保护
+
+后端默认开启基础保护：
+
+- 全局 API IP 限流，避免脚本刷接口。
+- 短信验证码按 IP 和手机号双维度限流，避免短信轰炸。
+- 验证码登录失败次数限制，降低撞库/爆破风险。
+- 聊天按用户限流，并限制每日 AI 调用次数，控制模型调用成本。
+- 聊天内容检测明显的 prompt injection、系统提示词泄露请求、批量垃圾内容和异常长输入。
+- 生产环境聊天相关接口必须使用登录 cookie；`user_id` 直传只在 `DEBUG=true` 的本地联调中可用。
+- 命中的拒绝事件会写入 `helen.abuse_events`，用于排查 `client_ip`、`user_entity_id`、`category`、`reason` 和 `metadata_json`。
+
+可在 `.env` 中调整 `SECURITY_*` 配置。多实例部署时建议把当前内存限流器替换为 Redis 等共享存储。
 
 ## 数据库结构
 

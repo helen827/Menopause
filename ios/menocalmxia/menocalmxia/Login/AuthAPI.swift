@@ -53,6 +53,20 @@ struct CheckLoginResponse: Decodable {
     }
 }
 
+struct AccountDeletionResponse: Decodable {
+    let deleted: Bool
+    let mobile: String?
+    let login: String?
+    let blockId: String?
+
+    enum CodingKeys: String, CodingKey {
+        case deleted
+        case mobile
+        case login
+        case blockId = "block_id"
+    }
+}
+
 struct EntityBody: Decodable {
     let entityId: String
     let mobile: String
@@ -856,15 +870,7 @@ enum AuthAPIError: LocalizedError {
 final class AuthAPI {
     static let shared = AuthAPI()
 
-    // Simulator can reach the local Tornado server through localhost.
-    // Real devices need the Mac's current LAN address.
-    var baseURL: URL = {
-        #if targetEnvironment(simulator)
-        return URL(string: "http://127.0.0.1:8888")!
-        #else
-        return URL(string: "http://10.10.10.84:8888")!
-        #endif
-    }()
+    var baseURL = URL(string: "https://api.proudmenopause.com")!
 
     private init() {}
 
@@ -885,6 +891,10 @@ final class AuthAPI {
 
     func checkLogin() async throws -> CheckLoginResponse {
         try await get(path: "/api/check_login")
+    }
+
+    func deleteAccount() async throws -> AccountDeletionResponse {
+        try await delete(path: "/api/account")
     }
 
     func ensureChat() async throws -> ChatEnsureResponse {
@@ -1040,6 +1050,17 @@ final class AuthAPI {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONEncoder().encode(body)
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        return try decodeResponse(data: data, response: response)
+    }
+
+    private func delete<Response: Decodable>(path: String) async throws -> Response {
+        guard let url = URL(string: path, relativeTo: baseURL) else {
+            throw AuthAPIError.badURL
+        }
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
 
         let (data, response) = try await URLSession.shared.data(for: request)
         return try decodeResponse(data: data, response: response)

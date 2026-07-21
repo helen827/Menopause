@@ -1505,6 +1505,8 @@ private struct AIChatView: View {
                     ScrollViewReader { proxy in
                         ScrollView {
                             LazyVStack(spacing: 12) {
+                                MedicalComplianceNotice()
+
                                 if viewModel.isLoading && viewModel.comments.isEmpty {
                                     VStack(spacing: 12) {
                                         ProgressView()
@@ -1964,6 +1966,9 @@ private struct MineTab: View {
     @State private var selectedCheckinRange = "30d"
     @State private var refreshStatusText: String?
     @State private var isRefreshing = false
+    @State private var isDeletingAccount = false
+    @State private var showDeleteAccountConfirmation = false
+    @State private var accountDeletionError: String?
 
     var body: some View {
         NavigationStack {
@@ -2013,6 +2018,39 @@ private struct MineTab: View {
                                 .stroke(AppTheme.cardStroke, lineWidth: 1)
                         }
                         .padding(.top, 12)
+
+                        Button(role: .destructive) {
+                            showDeleteAccountConfirmation = true
+                        } label: {
+                            HStack(spacing: 10) {
+                                if isDeletingAccount {
+                                    ProgressView()
+                                        .tint(.red)
+                                } else {
+                                    Image(systemName: "trash.fill")
+                                        .font(.system(size: 16, weight: .black))
+                                }
+
+                                Text(isDeletingAccount ? "正在删除账号..." : "删除账号")
+                            }
+                            .font(.system(size: 17, weight: .bold))
+                            .foregroundStyle(Color(red: 0.72, green: 0.15, blue: 0.16))
+                            .frame(maxWidth: .infinity, minHeight: 52)
+                            .background(Color(red: 1.0, green: 0.94, blue: 0.94), in: Capsule())
+                            .overlay {
+                                Capsule()
+                                    .stroke(Color(red: 0.92, green: 0.56, blue: 0.56), lineWidth: 1)
+                            }
+                        }
+                        .disabled(isDeletingAccount)
+
+                        if let accountDeletionError {
+                            Text(accountDeletionError)
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(Color(red: 0.72, green: 0.15, blue: 0.16))
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.horizontal, 8)
+                        }
                     }
                     .padding(24)
                 }
@@ -2065,6 +2103,16 @@ private struct MineTab: View {
                 Task {
                     await loadRecordCalendar()
                 }
+            }
+            .alert("删除账号？", isPresented: $showDeleteAccountConfirmation) {
+                Button("取消", role: .cancel) {}
+                Button("永久删除", role: .destructive) {
+                    Task {
+                        await deleteAccount()
+                    }
+                }
+            } message: {
+                Text("这会删除当前手机号账号、个人资料、聊天记录、趋势报告和练习记录。删除后无法恢复。")
             }
         }
     }
@@ -2125,6 +2173,25 @@ private struct MineTab: View {
         } catch {
             recordCalendarData = RecordCalendarData.currentEmpty()
         }
+    }
+
+    private func deleteAccount() async {
+        guard !isDeletingAccount else { return }
+        isDeletingAccount = true
+        accountDeletionError = nil
+
+        do {
+            let response = try await AuthAPI.shared.deleteAccount()
+            if response.deleted {
+                sessionStore.signOut()
+            } else {
+                accountDeletionError = "账号删除未完成，请稍后重试"
+            }
+        } catch {
+            accountDeletionError = error.localizedDescription
+        }
+
+        isDeletingAccount = false
     }
 
     private var navItems: [MineNavItem] {
@@ -2627,6 +2694,8 @@ private struct MineNavRow: View {
             MedicalChecklistView(initialRange: "30d")
         } else if item.route == "record_reminder" {
             RecordReminderSettingsView()
+        } else if item.route == "privacy" {
+            PrivacyDetailView()
         } else {
             MinePlaceholderDetail(item: item)
         }
@@ -2659,6 +2728,7 @@ private struct TrendReportView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 18) {
                     header
+                    MedicalComplianceNotice()
                     rangePicker
                     if isLoading {
                         trendLoadingCard
@@ -3400,6 +3470,7 @@ private struct MedicalChecklistView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
                     checklistHeader
+                    MedicalComplianceNotice()
                     checklistRangePicker
 
                     if isLoading {
@@ -3802,6 +3873,9 @@ private struct MedicalChecklistView: View {
             lines.append(contentsOf: orderedSelectedQuestions.enumerated().map { "\($0.offset + 1). \($0.element)" })
         }
 
+        lines.append("")
+        lines.append(MedicalComplianceText.shortExport)
+
         return lines.joined(separator: "\n")
     }
 
@@ -3948,6 +4022,44 @@ private struct TrendCard<Content: View>: View {
                     )
             }
             .shadow(color: AppTheme.rose.opacity(0.10), radius: 20, y: 12)
+    }
+}
+
+private enum MedicalComplianceText {
+    static let title = "医疗提示"
+    static let full = "本 App 内容用于自我观察和就医沟通准备，不是医学诊断，不是治疗建议，不能替代医生判断。若出现紧急、严重或持续加重的症状，请及时就医或联系当地急救服务。"
+    static let shortExport = "说明：以上内容仅用于自我观察和就医沟通准备，不是医学诊断，不是治疗建议；如有紧急、严重或持续加重症状，请及时就医。"
+}
+
+private struct MedicalComplianceNotice: View {
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: "cross.case")
+                .font(.system(size: 15, weight: .black))
+                .foregroundStyle(Color(red: 0.62, green: 0.30, blue: 0.34))
+                .frame(width: 32, height: 32)
+                .background(.white.opacity(0.70), in: Circle())
+
+            VStack(alignment: .leading, spacing: 5) {
+                Text(MedicalComplianceText.title)
+                    .font(.system(size: 15, weight: .black))
+                    .foregroundStyle(AppTheme.ink)
+
+                Text(MedicalComplianceText.full)
+                    .font(.system(size: 13, weight: .semibold))
+                    .lineSpacing(3)
+                    .foregroundStyle(AppTheme.inkSoft)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .background(.white.opacity(0.58), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .stroke(Color(red: 0.93, green: 0.86, blue: 0.88), lineWidth: 1)
+        }
     }
 }
 
@@ -4706,6 +4818,95 @@ private struct MinePlaceholderDetail: View {
         }
         .navigationTitle(item.title)
         .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+private struct PrivacyDetailView: View {
+    private let links = [
+        LegalLinkItem(title: "隐私政策", subtitle: "查看数据收集、使用、共享和保存方式", path: "/privacy", icon: "hand.raised.fill"),
+        LegalLinkItem(title: "用户协议", subtitle: "查看账号、服务和使用规则", path: "/terms", icon: "doc.text.fill"),
+        LegalLinkItem(title: "数据删除/撤回同意", subtitle: "申请删除记录或撤回 AI/健康数据处理同意", path: "/data-deletion", icon: "trash.fill"),
+        LegalLinkItem(title: "AI/健康建议免责声明", subtitle: "了解 AI 回复和趋势报告的使用边界", path: "/ai-health-disclaimer", icon: "heart.text.square.fill"),
+    ]
+
+    var body: some View {
+        ZStack {
+            AppBackground()
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("数据与隐私")
+                            .font(.system(size: 32, weight: .black))
+                            .foregroundStyle(AppTheme.ink)
+
+                        Text("潮安会收集手机号、聊天内容、健康/症状记录和冥想记录。部分聊天和健康记录会发送给 AI 服务处理，用于生成回复、趋势报告和就医沟通清单。")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(AppTheme.inkSoft)
+                    }
+                    .padding(22)
+                    .glassCard(cornerRadius: 24)
+
+                    VStack(spacing: 12) {
+                        ForEach(links) { item in
+                            Link(destination: item.url) {
+                                HStack(spacing: 16) {
+                                    Image(systemName: item.icon)
+                                        .font(.system(size: 18, weight: .bold))
+                                        .foregroundStyle(AppTheme.roseStrong)
+                                        .frame(width: 40, height: 40)
+                                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 13, style: .continuous))
+
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(item.title)
+                                            .font(.system(size: 17, weight: .black))
+                                            .foregroundStyle(AppTheme.ink)
+
+                                        Text(item.subtitle)
+                                            .font(.system(size: 13, weight: .semibold))
+                                            .foregroundStyle(Color(red: 0.54, green: 0.49, blue: 0.53))
+                                            .fixedSize(horizontal: false, vertical: true)
+                                    }
+
+                                    Spacer()
+
+                                    Image(systemName: "arrow.up.forward")
+                                        .font(.system(size: 15, weight: .black))
+                                        .foregroundStyle(Color(red: 0.62, green: 0.56, blue: 0.60))
+                                }
+                                .padding(18)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .glassCard(cornerRadius: 22)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+
+                    Text("AI 回复和健康趋势仅用于记录、科普和就医沟通准备，不替代医生诊断、治疗、处方或急救。")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundStyle(Color(red: 0.50, green: 0.38, blue: 0.43))
+                        .padding(18)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .glassCard(cornerRadius: 20)
+                }
+                .padding(.horizontal, 18)
+                .padding(.vertical, 20)
+            }
+        }
+        .navigationTitle("数据与隐私")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+private struct LegalLinkItem: Identifiable {
+    let id = UUID()
+    let title: String
+    let subtitle: String
+    let path: String
+    let icon: String
+
+    var url: URL {
+        URL(string: path, relativeTo: AuthAPI.shared.baseURL) ?? AuthAPI.shared.baseURL
     }
 }
 
