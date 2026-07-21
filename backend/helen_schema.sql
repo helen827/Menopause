@@ -38,6 +38,21 @@ CREATE TABLE IF NOT EXISTS helen.sms_verify_logs (
   KEY idx_sms_verify_createtime (createtime)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS helen.abuse_events (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  client_ip VARCHAR(64) DEFAULT NULL,
+  path VARCHAR(255) DEFAULT NULL,
+  user_entity_id VARCHAR(64) DEFAULT NULL,
+  category VARCHAR(64) NOT NULL,
+  reason VARCHAR(512) NOT NULL,
+  metadata_json JSON DEFAULT NULL,
+  createtime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_abuse_events_client_ip_time (client_ip, createtime),
+  KEY idx_abuse_events_user_time (user_entity_id, createtime),
+  KEY idx_abuse_events_category_time (category, createtime)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS helen.chat_index (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   chat_id CHAR(32) NOT NULL,

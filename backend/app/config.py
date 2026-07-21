@@ -18,8 +18,10 @@ def _bool_env(name: str, default: bool = False) -> bool:
 @dataclass(frozen=True)
 class Settings:
     app_port: int = int(os.getenv("APP_PORT", "8888"))
+    app_host: str = os.getenv("APP_HOST", "127.0.0.1")
     debug: bool = _bool_env("DEBUG", True)
     cookie_secret: str = os.getenv("COOKIE_SECRET", "dev-cookie-secret-change-me")
+    cookie_secure: bool = _bool_env("COOKIE_SECURE", not _bool_env("DEBUG", True))
 
     mysql_host: str = os.getenv("MYSQL_HOST", "127.0.0.1")
     mysql_port: int = int(os.getenv("MYSQL_PORT", "3306"))
@@ -47,6 +49,22 @@ class Settings:
     deepseek_model: str = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
     deepseek_max_history: int = int(os.getenv("DEEPSEEK_MAX_HISTORY", "40"))
     deepseek_max_tokens: int = int(os.getenv("DEEPSEEK_MAX_TOKENS", "1200"))
+
+    security_enabled: bool = _bool_env("SECURITY_ENABLED", True)
+    security_audit_enabled: bool = _bool_env("SECURITY_AUDIT_ENABLED", True)
+    security_max_json_body_bytes: int = int(os.getenv("SECURITY_MAX_JSON_BODY_BYTES", "65536"))
+    security_general_window_seconds: int = int(os.getenv("SECURITY_GENERAL_WINDOW_SECONDS", "60"))
+    security_general_max_requests: int = int(os.getenv("SECURITY_GENERAL_MAX_REQUESTS", "120"))
+    security_sms_window_seconds: int = int(os.getenv("SECURITY_SMS_WINDOW_SECONDS", "3600"))
+    security_sms_ip_max_requests: int = int(os.getenv("SECURITY_SMS_IP_MAX_REQUESTS", "10"))
+    security_sms_mobile_max_requests: int = int(os.getenv("SECURITY_SMS_MOBILE_MAX_REQUESTS", "5"))
+    security_login_window_seconds: int = int(os.getenv("SECURITY_LOGIN_WINDOW_SECONDS", "3600"))
+    security_login_mobile_max_failures: int = int(os.getenv("SECURITY_LOGIN_MOBILE_MAX_FAILURES", "8"))
+    security_chat_window_seconds: int = int(os.getenv("SECURITY_CHAT_WINDOW_SECONDS", "60"))
+    security_chat_user_max_requests: int = int(os.getenv("SECURITY_CHAT_USER_MAX_REQUESTS", "20"))
+    security_ai_window_seconds: int = int(os.getenv("SECURITY_AI_WINDOW_SECONDS", "86400"))
+    security_ai_user_max_requests: int = int(os.getenv("SECURITY_AI_USER_MAX_REQUESTS", "30"))
+    security_chat_max_content_chars: int = int(os.getenv("SECURITY_CHAT_MAX_CONTENT_CHARS", "2000"))
 
 
 @lru_cache

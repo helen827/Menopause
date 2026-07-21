@@ -95,6 +95,18 @@ function SectionTitle({ icon: Icon, children, trailing }) {
   );
 }
 
+function MedicalNotice() {
+  return (
+    <section className="medical-notice" aria-label="医疗提示">
+      <span className="icon-glass"><Stethoscope size={18} weight="bold" /></span>
+      <p>
+        <b>医疗提示</b>
+        本 App 内容用于自我观察和就医沟通准备，不是医学诊断，不是治疗建议，不能替代医生判断。紧急、严重或持续加重症状请及时就医。
+      </p>
+    </section>
+  );
+}
+
 function BrandMark({ size = 20 }) {
   const gradientId = useId();
 
@@ -248,6 +260,7 @@ function AIChatScreen() {
         <div><h1>AI 对话</h1><p>说说今天的身体和心情</p></div>
         <button className="round-glass" aria-label="对话历史"><ClockCounterClockwise size={24} /></button>
       </header>
+      <MedicalNotice />
       <div className="companion-pill"><BrandMark size={18} />潮安陪伴中</div>
       <div className="date-divider"><span>今天</span></div>
       <div className="messages">
@@ -515,6 +528,7 @@ export function App() {
             <CalendarBlank size={24} weight="bold" />
           </button>
         </header>
+        <MedicalNotice />
 
         <div className="range-stage">
           <div className="range-source" aria-hidden="true" />

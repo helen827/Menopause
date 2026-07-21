@@ -13,6 +13,7 @@ from app.services.chat import (
     build_deepseek_messages,
     create_chat_prompt,
     ensure_chat,
+    get_chat_owner,
     list_chat_prompts,
     load_chat_activity,
     load_chat_comments,
@@ -22,6 +23,7 @@ from app.services.chat import (
 )
 from app.services.deepseek import DeepSeekError, DeepSeekService
 from app.services.knowledge import build_knowledge_system_message, search_knowledge
+from app.services.security import raise_for_abuse
 from app.services.trend_report import refresh_trend_report_for_chat
 
 
@@ -42,6 +44,8 @@ class ChatBaseHandler(BaseHandler):
     def current_user_entity_id(self):
         block_id = str(self._param("user_id", "") or self._param("entity_id", "") or "").strip().lower()
         if block_id:
+            if not get_settings().debug:
+                raise tornado.web.HTTPError(401, reason="login required")
             if not HEX32_RE.fullmatch(block_id):
                 raise tornado.web.HTTPError(400, reason="user_id must be a 32-character hex string")
             return block_id
@@ -65,6 +69,13 @@ class ChatBaseHandler(BaseHandler):
             service = DeepSeekService(get_settings())
             self.application.settings["deepseek_service"] = service
         return service
+
+    async def require_chat_owner(self, cur, chat_id, user_entity_id):
+        owner = await get_chat_owner(cur, chat_id)
+        if owner is None:
+            raise tornado.web.HTTPError(404, reason="chat_id not found")
+        if owner != user_entity_id:
+            raise tornado.web.HTTPError(403, reason="chat does not belong to current user")
 
 
 class ChatEnsureHandler(ChatBaseHandler):
@@ -90,6 +101,7 @@ class ChatEnsureHandler(ChatBaseHandler):
 
 class ChatLoadHandler(ChatBaseHandler):
     async def get(self):
+        user_entity_id = self.current_user_entity_id()
         chat_id = str(self.get_argument("chat_id", "")).strip().lower()
         last_comment_id = str(self.get_argument("last_comment_id", "")).strip().lower() or None
         if not HEX32_RE.fullmatch(chat_id):
@@ -99,6 +111,7 @@ class ChatLoadHandler(ChatBaseHandler):
 
         async with self.mysql.acquire() as conn:
             async with conn.cursor() as cur:
+                await self.require_chat_owner(cur, chat_id, user_entity_id)
                 data = await load_chat_comments(cur, chat_id, last_comment_id)
         self.write_json({"data": data if data else "none"})
 
@@ -149,6 +162,17 @@ class ChatSubmitHandler(ChatBaseHandler):
         except (TypeError, ValueError) as exc:
             raise tornado.web.HTTPError(400, reason="tz_offset_minutes must be an integer") from exc
 
+        user_entity_id = self.current_user_entity_id()
+        decision = self.security_guard.check_chat_submit(
+            user_id=user_entity_id,
+            ip=self.client_ip,
+            content=content,
+            ask_ai=ask_ai,
+        )
+        if not decision.allowed:
+            await self.record_abuse(decision, user_id=user_entity_id)
+            raise_for_abuse(decision)
+
         comment = {
             "comment_id": comment_id,
             "role": "user",
@@ -162,6 +186,7 @@ class ChatSubmitHandler(ChatBaseHandler):
             async with conn.cursor() as cur:
                 await cur.execute("START TRANSACTION")
                 try:
+                    await self.require_chat_owner(cur, chat_id, user_entity_id)
                     result = await append_chat_comment(cur, chat_id, comment)
                     trend_report = await refresh_trend_report_for_chat(
                         cur,
@@ -189,6 +214,7 @@ class ChatSubmitHandler(ChatBaseHandler):
             async with self.mysql.acquire() as conn:
                 async with conn.cursor() as cur:
                     try:
+                        await self.require_chat_owner(cur, chat_id, user_entity_id)
                         context = await build_deepseek_messages(cur, chat_id, get_settings().deepseek_max_history)
                         knowledge_refs = await search_knowledge(cur, content, 5)
                     except ValueError as exc:
@@ -256,12 +282,14 @@ class ChatSubmitHandler(ChatBaseHandler):
 
 class ChatPromptListHandler(ChatBaseHandler):
     async def get(self):
+        user_entity_id = self.current_user_entity_id()
         chat_id = str(self.get_argument("chat_id", "")).strip().lower()
         if not HEX32_RE.fullmatch(chat_id):
             raise tornado.web.HTTPError(400, reason="chat_id must be a 32-character hex string")
 
         async with self.mysql.acquire() as conn:
             async with conn.cursor() as cur:
+                await self.require_chat_owner(cur, chat_id, user_entity_id)
                 data = await list_chat_prompts(cur, chat_id)
         self.write_json({"data": data if data else "none"})
 
@@ -289,11 +317,13 @@ class ChatPromptCreateHandler(ChatBaseHandler):
             showoff = showoff.lower() not in ("0", "false", "no")
         else:
             showoff = bool(showoff)
+        user_entity_id = self.current_user_entity_id()
 
         async with self.mysql.acquire() as conn:
             async with conn.cursor() as cur:
                 await cur.execute("START TRANSACTION")
                 try:
+                    await self.require_chat_owner(cur, chat_id, user_entity_id)
                     prompt = await create_chat_prompt(
                         cur,
                         chat_id,
@@ -316,6 +346,7 @@ class ChatPromptCreateHandler(ChatBaseHandler):
 
 class ChatPromptSelectHandler(ChatBaseHandler):
     async def post(self):
+        user_entity_id = self.current_user_entity_id()
         chat_id = str(self._param("chat_id", "")).strip().lower()
         prompt_id = str(self._param("prompt_id", "")).strip().lower()
         if not HEX32_RE.fullmatch(chat_id):
@@ -327,6 +358,7 @@ class ChatPromptSelectHandler(ChatBaseHandler):
             async with conn.cursor() as cur:
                 await cur.execute("START TRANSACTION")
                 try:
+                    await self.require_chat_owner(cur, chat_id, user_entity_id)
                     prompt = await select_chat_prompt(cur, chat_id, prompt_id)
                     prompts = await list_chat_prompts(cur, chat_id)
                     await cur.execute("COMMIT")
@@ -341,6 +373,7 @@ class ChatPromptSelectHandler(ChatBaseHandler):
 
 class ChatPromptShowoffHandler(ChatBaseHandler):
     async def post(self):
+        user_entity_id = self.current_user_entity_id()
         chat_id = str(self._param("chat_id", "")).strip().lower()
         prompt_id = str(self._param("prompt_id", "")).strip().lower()
         showoff = self._param("showoff", True)
@@ -357,6 +390,7 @@ class ChatPromptShowoffHandler(ChatBaseHandler):
             async with conn.cursor() as cur:
                 await cur.execute("START TRANSACTION")
                 try:
+                    await self.require_chat_owner(cur, chat_id, user_entity_id)
                     prompts = await set_chat_prompt_showoff(cur, chat_id, prompt_id, showoff)
                     await cur.execute("COMMIT")
                 except ValueError as exc:

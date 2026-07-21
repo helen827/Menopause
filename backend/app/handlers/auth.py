@@ -6,8 +6,10 @@ import tornado.web
 
 from app.config import get_settings
 from app.handlers.base import BaseHandler
+from app.services.account import delete_mobile_account
 from app.services.aliyun_sms import AliyunSmsService
 from app.services.entities import get_or_create_mobile_entity
+from app.services.security import raise_for_abuse
 
 
 MOBILE_RE = re.compile(r"^\d{11}$")
@@ -36,10 +38,47 @@ class AuthBaseHandler(BaseHandler):
             self.application.settings["aliyun_sms_service"] = service
         return service
 
+    def _current_session(self):
+        raw_session = self.get_signed_cookie(SESSION_COOKIE_NAME)
+        if not raw_session:
+            return None
+
+        try:
+            session = json.loads(raw_session.decode("utf-8") if isinstance(raw_session, bytes) else raw_session)
+        except json.JSONDecodeError:
+            self.clear_cookie(SESSION_COOKIE_NAME)
+            return None
+
+        block_id = str(session.get("block_id", ""))
+        mobile = str(session.get("mobile", ""))
+        login = str(session.get("login", ""))
+        database = str(session.get("database", ""))
+        if not block_id or not mobile or not login:
+            self.clear_cookie(SESSION_COOKIE_NAME)
+            return None
+
+        return {
+            "block_id": block_id,
+            "mobile": mobile,
+            "login": login,
+            "database": database,
+        }
+
+    def _current_session_required(self):
+        session = self._current_session()
+        if not session:
+            raise tornado.web.HTTPError(401, reason="login required")
+        return session
+
 
 class SendCodeHandler(AuthBaseHandler):
     async def post(self):
         mobile = self._mobile_param()
+        decision = self.security_guard.check_sms_send(ip=self.client_ip, mobile=mobile)
+        if not decision.allowed:
+            await self.record_abuse(decision, user_id=f"mobile:{mobile}")
+            raise_for_abuse(decision)
+
         out_id = uuid.uuid4().hex
 
         try:
@@ -103,6 +142,10 @@ class LoginHandler(AuthBaseHandler):
             check_result.get("verify_result"),
         )
         if not check_result["success"]:
+            decision = self.security_guard.record_login_failure(mobile=mobile)
+            if not decision.allowed:
+                await self.record_abuse(decision, user_id=f"mobile:{mobile}")
+                raise_for_abuse(decision)
             self.write_json({"data": "none", "message": check_result.get("message") or "verify code invalid"}, status=401)
             return
 
@@ -140,6 +183,7 @@ class LoginHandler(AuthBaseHandler):
             json.dumps(cookie_payload, separators=(",", ":")),
             expires_days=30,
             httponly=True,
+            secure=get_settings().cookie_secure,
             samesite="Lax",
         )
 
@@ -164,33 +208,34 @@ class CheckLoginHandler(AuthBaseHandler):
         await self._handle()
 
     async def _handle(self):
-        raw_session = self.get_signed_cookie(SESSION_COOKIE_NAME)
-        if not raw_session:
-            self.write_json({"logged_in": False, "data": "none"})
-            return
-
-        try:
-            session = json.loads(raw_session.decode("utf-8") if isinstance(raw_session, bytes) else raw_session)
-        except json.JSONDecodeError:
-            self.clear_cookie(SESSION_COOKIE_NAME)
-            self.write_json({"logged_in": False, "data": "none"})
-            return
-
-        block_id = str(session.get("block_id", ""))
-        mobile = str(session.get("mobile", ""))
-        login = str(session.get("login", ""))
-        database = str(session.get("database", ""))
-        if not block_id or not mobile or not login:
-            self.clear_cookie(SESSION_COOKIE_NAME)
+        session = self._current_session()
+        if not session:
             self.write_json({"logged_in": False, "data": "none"})
             return
 
         self.write_json(
             {
                 "logged_in": True,
-                "mobile": mobile,
-                "login": login,
-                "block_id": block_id,
-                "database": database,
+                "mobile": session["mobile"],
+                "login": session["login"],
+                "block_id": session["block_id"],
+                "database": session["database"],
             }
         )
+
+
+class AccountDeletionHandler(AuthBaseHandler):
+    async def delete(self):
+        session = self._current_session_required()
+        async with self.mysql.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute("START TRANSACTION")
+                try:
+                    result = await delete_mobile_account(cur, session["mobile"], session["block_id"])
+                    await cur.execute("COMMIT")
+                except Exception:
+                    await cur.execute("ROLLBACK")
+                    raise
+
+        self.clear_cookie(SESSION_COOKIE_NAME)
+        self.write_json(result)

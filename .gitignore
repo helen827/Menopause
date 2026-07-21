@@ -14,6 +14,9 @@ node_modules/
 ui-prototype/node_modules/
 ui-prototype/.npm-cache/
 ui-prototype/dist/
+ui-prototype/coverage/
+.coverage
+backend/htmlcov/
 
 # Xcode
 DerivedData/

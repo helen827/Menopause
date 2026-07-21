@@ -277,6 +277,39 @@
       color: var(--pink);
     }
 
+    .medical-notice {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 16px 18px;
+      border-radius: 22px;
+      border: 1px solid #eadfe8;
+      background: rgba(255, 255, 255, 0.66);
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .medical-notice strong {
+      display: block;
+      margin-bottom: 2px;
+      color: var(--ink);
+      font-size: 15px;
+      font-weight: 900;
+    }
+
+    .medical-notice .notice-icon {
+      flex: 0 0 auto;
+      width: 38px;
+      height: 38px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: rgba(255, 255, 255, 0.82);
+      color: var(--pink);
+    }
+
     .range-picker {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -745,6 +778,14 @@
           </div>
           <div class="icon-badge">📅</div>
         </div>
+
+        <section class="medical-notice" aria-label="医疗提示">
+          <span class="notice-icon">⚕</span>
+          <div>
+            <strong>医疗提示</strong>
+            趋势报告用于自我观察和就医沟通准备，不是医学诊断，不是治疗建议，不能替代医生判断。若出现紧急、严重或持续加重的症状，请及时就医或联系当地急救服务。
+          </div>
+        </section>
 
         <div id="rangePicker" class="range-picker">
           <button class="range-btn" data-range="7d">7天</button>
