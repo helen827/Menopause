@@ -555,7 +555,7 @@
       <section class="panel">
         <h2 class="panel-title">System Prompt</h2>
         <div class="status-row">
-          <span>当前版本</span>
+          <span>全局当前版本</span>
           <span id="promptBadge" class="badge"><span class="dot"></span>未选择</span>
         </div>
         <label for="promptTitleInput">title</label>
@@ -576,6 +576,7 @@
           <button id="createPromptButton" class="primary" type="button">创建版本</button>
           <button id="loadPromptsButton" type="button">刷新列表</button>
         </div>
+        <p class="hint">Prompt 为应用级全局配置，切换一次会对所有用户和 chat 生效。</p>
         <div id="promptList" class="prompt-list">
           <p class="hint">准备 Chat 后会显示 prompt 版本。</p>
         </div>

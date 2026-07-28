@@ -138,7 +138,7 @@ private struct LoginCard: View {
             TextField("13800138000", text: $viewModel.mobile)
                 .keyboardType(.numberPad)
                 .textContentType(.telephoneNumber)
-                .onChange(of: viewModel.mobile) { _, _ in viewModel.normalizeMobile() }
+                .onChange(of: viewModel.mobile) { _ in viewModel.normalizeMobile() }
                 .textFieldStyle(LoginTextFieldStyle())
 
             FieldTitle("验证码")
@@ -148,7 +148,7 @@ private struct LoginCard: View {
                 TextField("6 位验证码", text: $viewModel.code)
                     .keyboardType(.numberPad)
                     .textContentType(.oneTimeCode)
-                    .onChange(of: viewModel.code) { _, _ in viewModel.normalizeCode() }
+                    .onChange(of: viewModel.code) { _ in viewModel.normalizeCode() }
                     .textFieldStyle(LoginTextFieldStyle())
 
                 Button(viewModel.isCodeSending ? "发送中" : "获取验证码") {

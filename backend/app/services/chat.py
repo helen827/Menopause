@@ -5,6 +5,7 @@ from app.services.entities import get_entity_body, put_entity_body
 
 
 CHAT_BLOCK_SIZE = 100
+GLOBAL_PROMPT_CHAT_ID = "0" * 32
 
 
 def now_iso():
@@ -12,6 +13,9 @@ def now_iso():
 
 
 async def ensure_chat(cur, user_entity_id):
+    active_prompt = await get_active_prompt(cur)
+    active_prompt_id = active_prompt["prompt_id"] if active_prompt else None
+    prompt_showoff = active_prompt["showoff"] if active_prompt else True
     await cur.execute(
         """
         SELECT chat_id, head_block_id, tail_block_id, total_comments, active_prompt_id, showoff
@@ -30,8 +34,8 @@ async def ensure_chat(cur, user_entity_id):
             "head_block_id": row[1],
             "tail_block_id": row[2],
             "total_comments": row[3],
-            "active_prompt_id": row[4],
-            "showoff": bool(row[5]),
+            "active_prompt_id": active_prompt_id,
+            "showoff": prompt_showoff,
             "created": False,
         }
 
@@ -43,18 +47,18 @@ async def ensure_chat(cur, user_entity_id):
         "head_block_id": None,
         "tail_block_id": None,
         "total_comments": 0,
-        "active_prompt_id": None,
-        "showoff": True,
+        "active_prompt_id": active_prompt_id,
+        "showoff": prompt_showoff,
         "createtime": now_iso(),
     }
     await put_entity_body(cur, chat_id, chat_body)
     await cur.execute(
         """
         INSERT INTO helen.chat_index
-          (chat_id, user_entity_id, title, head_block_id, tail_block_id, total_comments)
-        VALUES (%s, %s, %s, NULL, NULL, 0)
+          (chat_id, user_entity_id, title, active_prompt_id, showoff, head_block_id, tail_block_id, total_comments)
+        VALUES (%s, %s, %s, %s, %s, NULL, NULL, 0)
         """,
-        (chat_id, user_entity_id, "默认对话"),
+        (chat_id, user_entity_id, "默认对话", active_prompt_id, 1 if prompt_showoff else 0),
     )
     return {
         "chat_id": chat_id,
@@ -62,8 +66,8 @@ async def ensure_chat(cur, user_entity_id):
         "head_block_id": None,
         "tail_block_id": None,
         "total_comments": 0,
-        "active_prompt_id": None,
-        "showoff": True,
+        "active_prompt_id": active_prompt_id,
+        "showoff": prompt_showoff,
         "created": True,
     }
 
@@ -97,7 +101,7 @@ async def append_chat_comment(cur, chat_id, comment):
     if not chat:
         raise ValueError("chat_id not found")
 
-    active_prompt = await get_active_prompt(cur, chat_id)
+    active_prompt = await get_active_prompt(cur)
     if active_prompt:
         comment["system_prompt"] = {
             "prompt_id": active_prompt["prompt_id"],
@@ -407,7 +411,7 @@ def _meditation_tags(activity):
 
 
 async def build_deepseek_messages(cur, chat_id, max_history=40):
-    active_prompt = await get_active_prompt(cur, chat_id)
+    active_prompt = await get_active_prompt(cur)
     recent = await load_recent_chat_comments(cur, chat_id, max_history)
     if recent is None:
         raise ValueError("chat_id not found")
@@ -451,27 +455,12 @@ async def build_deepseek_messages(cur, chat_id, max_history=40):
 async def list_chat_prompts(cur, chat_id):
     await cur.execute(
         """
-        SELECT active_prompt_id, showoff
-        FROM helen.chat_index
-        WHERE chat_id = %s
-        LIMIT 1
-        """,
-        (chat_id,),
-    )
-    chat = await cur.fetchone()
-    if not chat:
-        return None
-
-    active_prompt_id = chat[0]
-    chat_showoff = bool(chat[1])
-    await cur.execute(
-        """
         SELECT prompt_id, title, `desc`, system_prompt, is_active, showoff, createtime, updatetime
         FROM helen.chat_prompts
         WHERE chat_id = %s
         ORDER BY id DESC
         """,
-        (chat_id,),
+        (GLOBAL_PROMPT_CHAT_ID,),
     )
     rows = await cur.fetchall()
     prompts = [
@@ -487,28 +476,17 @@ async def list_chat_prompts(cur, chat_id):
         }
         for row in rows
     ]
+    active_prompt = next((prompt for prompt in prompts if prompt["is_active"]), None)
     return {
         "chat_id": chat_id,
-        "active_prompt_id": active_prompt_id,
-        "showoff": chat_showoff,
+        "scope": "global",
+        "active_prompt_id": active_prompt["prompt_id"] if active_prompt else None,
+        "showoff": active_prompt["showoff"] if active_prompt else True,
         "prompts": prompts,
     }
 
 
 async def create_chat_prompt(cur, chat_id, title, desc, system_prompt, activate=True, showoff=True):
-    await cur.execute(
-        """
-        SELECT chat_id
-        FROM helen.chat_index
-        WHERE chat_id = %s
-        LIMIT 1
-        FOR UPDATE
-        """,
-        (chat_id,),
-    )
-    if not await cur.fetchone():
-        raise ValueError("chat_id not found")
-
     prompt_id = uuid.uuid4().hex
     if activate:
         await cur.execute(
@@ -517,7 +495,7 @@ async def create_chat_prompt(cur, chat_id, title, desc, system_prompt, activate=
             SET is_active = 0
             WHERE chat_id = %s
             """,
-            (chat_id,),
+            (GLOBAL_PROMPT_CHAT_ID,),
         )
     await cur.execute(
         """
@@ -525,23 +503,22 @@ async def create_chat_prompt(cur, chat_id, title, desc, system_prompt, activate=
           (prompt_id, chat_id, title, `desc`, system_prompt, is_active, showoff)
         VALUES (%s, %s, %s, %s, %s, %s, %s)
         """,
-        (prompt_id, chat_id, title, desc, system_prompt, 1 if activate else 0, 1 if showoff else 0),
+        (
+            prompt_id,
+            GLOBAL_PROMPT_CHAT_ID,
+            title,
+            desc,
+            system_prompt,
+            1 if activate else 0,
+            1 if showoff else 0,
+        ),
     )
-    if activate:
-        await cur.execute(
-            """
-            UPDATE helen.chat_index
-            SET active_prompt_id = %s,
-                showoff = %s
-            WHERE chat_id = %s
-            """,
-            (prompt_id, 1 if showoff else 0, chat_id),
-        )
 
     body = {
         "entity_type": "chat_prompt",
         "prompt_id": prompt_id,
-        "chat_id": chat_id,
+        "scope": "global",
+        "created_from_chat_id": chat_id,
         "title": title,
         "desc": desc,
         "system_prompt": system_prompt,
@@ -553,6 +530,7 @@ async def create_chat_prompt(cur, chat_id, title, desc, system_prompt, activate=
     return {
         "prompt_id": prompt_id,
         "chat_id": chat_id,
+        "scope": "global",
         "title": title,
         "desc": desc,
         "system_prompt": system_prompt,
@@ -570,7 +548,7 @@ async def select_chat_prompt(cur, chat_id, prompt_id):
         LIMIT 1
         FOR UPDATE
         """,
-        (chat_id, prompt_id),
+        (GLOBAL_PROMPT_CHAT_ID, prompt_id),
     )
     row = await cur.fetchone()
     if not row:
@@ -582,7 +560,7 @@ async def select_chat_prompt(cur, chat_id, prompt_id):
         SET is_active = 0
         WHERE chat_id = %s
         """,
-        (chat_id,),
+        (GLOBAL_PROMPT_CHAT_ID,),
     )
     await cur.execute(
         """
@@ -592,15 +570,6 @@ async def select_chat_prompt(cur, chat_id, prompt_id):
         """,
         (prompt_id,),
     )
-    await cur.execute(
-        """
-        UPDATE helen.chat_index
-        SET active_prompt_id = %s,
-            showoff = %s
-        WHERE chat_id = %s
-        """,
-        (prompt_id, 1 if row[4] else 0, chat_id),
-    )
     body = await get_entity_body(cur, prompt_id)
     if body:
         body["is_active"] = True
@@ -609,6 +578,7 @@ async def select_chat_prompt(cur, chat_id, prompt_id):
     return {
         "prompt_id": row[0],
         "chat_id": chat_id,
+        "scope": "global",
         "title": row[1],
         "desc": row[2] or "",
         "system_prompt": row[3],
@@ -627,7 +597,7 @@ async def set_chat_prompt_showoff(cur, chat_id, prompt_id, showoff):
         LIMIT 1
         FOR UPDATE
         """,
-        (chat_id, prompt_id),
+        (GLOBAL_PROMPT_CHAT_ID, prompt_id),
     )
     if not await cur.fetchone():
         raise ValueError("prompt_id not found")
@@ -638,15 +608,7 @@ async def set_chat_prompt_showoff(cur, chat_id, prompt_id, showoff):
         SET showoff = %s
         WHERE chat_id = %s AND prompt_id = %s
         """,
-        (1 if showoff else 0, chat_id, prompt_id),
-    )
-    await cur.execute(
-        """
-        UPDATE helen.chat_index
-        SET showoff = %s
-        WHERE chat_id = %s AND active_prompt_id = %s
-        """,
-        (1 if showoff else 0, chat_id, prompt_id),
+        (1 if showoff else 0, GLOBAL_PROMPT_CHAT_ID, prompt_id),
     )
     body = await get_entity_body(cur, prompt_id)
     if body:
@@ -656,7 +618,7 @@ async def set_chat_prompt_showoff(cur, chat_id, prompt_id, showoff):
     return await list_chat_prompts(cur, chat_id)
 
 
-async def get_active_prompt(cur, chat_id):
+async def get_active_prompt(cur, chat_id=None):
     await cur.execute(
         """
         SELECT prompt_id, title, `desc`, system_prompt, showoff, createtime
@@ -665,7 +627,7 @@ async def get_active_prompt(cur, chat_id):
         ORDER BY id DESC
         LIMIT 1
         """,
-        (chat_id,),
+        (GLOBAL_PROMPT_CHAT_ID,),
     )
     row = await cur.fetchone()
     if not row:

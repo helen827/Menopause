@@ -21,6 +21,7 @@ python main.py
 - `GET http://127.0.0.1:8888/terms`，用户协议 URL
 - `GET http://127.0.0.1:8888/data-deletion`，数据删除/撤回同意说明
 - `GET http://127.0.0.1:8888/ai-health-disclaimer`，AI/健康建议免责声明
+- `GET http://127.0.0.1:8888/support`，用户支持与联系方式
 - `GET http://127.0.0.1:8888/daily_quote`
 - `GET http://127.0.0.1:8888/health`
 - `GET http://127.0.0.1:8888/api/users`
@@ -37,8 +38,8 @@ python main.py
 - `GET/POST http://127.0.0.1:8888/api/chat/ensure`，根据登录 cookie 的用户 entity 创建或返回默认 `chat_id`
 - `GET http://127.0.0.1:8888/api/chat/load?chat_id=32位UUID`，读取最近一组聊天记录；可加 `last_comment_id=32位UUID`
 - `POST http://127.0.0.1:8888/api/chat/submit`，JSON 示例：`{"chat_id":"32位UUID","uuid":"32位UUID","content":"你好","ws_block_ids":[]}`
-- `GET http://127.0.0.1:8888/api/chat/prompts/list?chat_id=32位UUID`，查看当前 chat 的 system prompt 版本列表
-- `POST http://127.0.0.1:8888/api/chat/prompts/create`，JSON 示例：`{"chat_id":"32位UUID","title":"v1","desc":"测试版本","system_prompt":"你是...","activate":true}`
+- `GET http://127.0.0.1:8888/api/chat/prompts/list?chat_id=32位UUID`，查看应用级全局 system prompt 版本列表；`chat_id` 仅用于登录用户身份校验
+- `POST http://127.0.0.1:8888/api/chat/prompts/create`，创建全局版本，JSON 示例：`{"chat_id":"32位UUID","title":"v1","desc":"测试版本","system_prompt":"你是...","activate":true}`。激活后，所有现有和新建 chat 都会使用该版本
 - `POST http://127.0.0.1:8888/api/chat/prompts/select`，JSON 示例：`{"chat_id":"32位UUID","prompt_id":"32位UUID"}`
 - `GET/POST http://127.0.0.1:8888/api/trend_report/ensure`，根据登录用户创建或返回身体变化趋势 block，内部包含 `7d`、`30d`、`90d`
 - `GET http://127.0.0.1:8888/api/trend_report/load`，读取当前用户的身体变化趋势 block；如尚不存在会自动创建。若未带登录 cookie，可传 `?user_id=32位UUID`
@@ -98,7 +99,7 @@ DEEPSEEK_MAX_HISTORY=40
 DEEPSEEK_MAX_TOKENS=1200
 ```
 
-`/api/chat/submit` 默认会调用 DeepSeek：先存用户消息，再用当前 chat 的 system prompt 和最近消息构造上下文，最后把 assistant 回复也存回同一个 chat。需要只存用户消息时，可以传 `{"ask_ai": false}`。每次提交聊天后，接口也会自动刷新当前用户的身体变化趋势 block，把 `7d`、`30d`、`90d` 三个周期的概况、高频症状、睡眠趋势、可能触发因素和推荐下一步写入 `trend_report_blocks` 对应的实体 body。
+`/api/chat/submit` 默认会调用 DeepSeek：先存用户消息，再用当前应用级全局 system prompt 和最近消息构造上下文，最后把 assistant 回复也存回同一个 chat。每条消息会保存当时的 prompt 版本快照，后续切换全局版本不会改写历史。需要只存用户消息时，可以传 `{"ask_ai": false}`。每次提交聊天后，接口也会自动刷新当前用户的身体变化趋势 block，把 `7d`、`30d`、`90d` 三个周期的概况、高频症状、睡眠趋势、可能触发因素和推荐下一步写入 `trend_report_blocks` 对应的实体 body。
 
 如果知识库里有启用的条目，`/api/chat/submit` 会用用户本次问题检索知识库，并把命中的参考内容作为后台 system message 注入给 DeepSeek。知识库内容不会直接显示在用户聊天气泡里，但会跟 assistant 消息一起保存为 `knowledge_refs`，方便之后排查回答依据。
 

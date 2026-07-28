@@ -1,3 +1,4 @@
+import hmac
 import json
 import re
 import uuid
@@ -15,6 +16,32 @@ from app.services.security import raise_for_abuse
 MOBILE_RE = re.compile(r"^\d{11}$")
 CODE_RE = re.compile(r"^\d{4,8}$")
 SESSION_COOKIE_NAME = "user_session"
+SMS_LOG_MESSAGE_LIMIT = 4000
+
+
+def _sms_log_message(message):
+    if message is None:
+        return None
+    text = str(message)
+    if len(text) <= SMS_LOG_MESSAGE_LIMIT:
+        return text
+    return text[:SMS_LOG_MESSAGE_LIMIT] + "...[truncated]"
+
+
+def _is_app_review_mobile(settings, mobile):
+    return (
+        settings.app_review_login_enabled
+        and MOBILE_RE.fullmatch(settings.app_review_mobile or "") is not None
+        and CODE_RE.fullmatch(settings.app_review_code or "") is not None
+        and hmac.compare_digest(mobile, settings.app_review_mobile)
+    )
+
+
+def _is_valid_app_review_code(settings, mobile, verify_code):
+    return _is_app_review_mobile(settings, mobile) and hmac.compare_digest(
+        verify_code,
+        settings.app_review_code,
+    )
 
 
 class AuthBaseHandler(BaseHandler):
@@ -81,11 +108,24 @@ class SendCodeHandler(AuthBaseHandler):
 
         out_id = uuid.uuid4().hex
 
+        if _is_app_review_mobile(get_settings(), mobile):
+            await self._record_send(mobile, out_id, True, "app review verification code requested", None)
+            self.write_json(
+                {
+                    "success": True,
+                    "mobile": mobile,
+                    "out_id": out_id,
+                    "request_id": None,
+                }
+            )
+            return
+
         try:
             result = await self.sms_service.send_code(mobile, out_id)
         except Exception as exc:
-            await self._record_send(mobile, out_id, False, getattr(exc, "message", str(exc)), None)
-            raise tornado.web.HTTPError(502, reason=f"aliyun send failed: {getattr(exc, 'message', str(exc))}") from exc
+            message = getattr(exc, "message", str(exc))
+            await self._record_send(mobile, out_id, False, message, None)
+            raise tornado.web.HTTPError(502, reason=f"aliyun send failed: {message}") from exc
 
         await self._record_send(
             mobile,
@@ -116,7 +156,7 @@ class SendCodeHandler(AuthBaseHandler):
                       (mobile, out_id, action, success, request_id, message)
                     VALUES (%s, %s, 'send', %s, %s, %s)
                     """,
-                    (mobile, out_id, 1 if success else 0, request_id, message),
+                    (mobile, out_id, 1 if success else 0, request_id, _sms_log_message(message)),
                 )
 
 
@@ -128,11 +168,21 @@ class LoginHandler(AuthBaseHandler):
             raise tornado.web.HTTPError(400, reason="code must be 4-8 digits")
 
         out_id = self._param("out_id") or None
-        try:
-            check_result = await self.sms_service.check_code(mobile, verify_code, out_id)
-        except Exception as exc:
-            await self._record_check(mobile, out_id, False, getattr(exc, "message", str(exc)), None)
-            raise tornado.web.HTTPError(502, reason=f"aliyun check failed: {getattr(exc, 'message', str(exc))}") from exc
+        settings = get_settings()
+        if _is_app_review_mobile(settings, mobile):
+            review_code_valid = _is_valid_app_review_code(settings, mobile, verify_code)
+            check_result = {
+                "success": review_code_valid,
+                "message": "app review code accepted" if review_code_valid else "app review code invalid",
+                "verify_result": "PASS" if review_code_valid else "FAIL",
+            }
+        else:
+            try:
+                check_result = await self.sms_service.check_code(mobile, verify_code, out_id)
+            except Exception as exc:
+                message = getattr(exc, "message", str(exc))
+                await self._record_check(mobile, out_id, False, message, None)
+                raise tornado.web.HTTPError(502, reason=f"aliyun check failed: {message}") from exc
 
         await self._record_check(
             mobile,
@@ -196,7 +246,13 @@ class LoginHandler(AuthBaseHandler):
                       (mobile, out_id, action, success, message, verify_result)
                     VALUES (%s, %s, 'check', %s, %s, %s)
                     """,
-                    (mobile, out_id, 1 if success else 0, message, None if verify_result is None else str(verify_result)),
+                    (
+                        mobile,
+                        out_id,
+                        1 if success else 0,
+                        _sms_log_message(message),
+                        None if verify_result is None else str(verify_result),
+                    ),
                 )
 
 

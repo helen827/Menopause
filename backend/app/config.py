@@ -44,6 +44,10 @@ class Settings:
     aliyun_sms_return_verify_code: bool = _bool_env("ALIYUN_SMS_RETURN_VERIFY_CODE", False)
     aliyun_sms_mock: bool = _bool_env("ALIYUN_SMS_MOCK", False)
 
+    app_review_login_enabled: bool = _bool_env("APP_REVIEW_LOGIN_ENABLED", False)
+    app_review_mobile: str = os.getenv("APP_REVIEW_MOBILE", "")
+    app_review_code: str = os.getenv("APP_REVIEW_CODE", "")
+
     deepseek_api_key: str = os.getenv("DEEPSEEK_API_KEY", "")
     deepseek_base_url: str = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
     deepseek_model: str = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")

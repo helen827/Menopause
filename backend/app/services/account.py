@@ -30,18 +30,6 @@ async def delete_mobile_account(cur, mobile, entity_id):
                 chat_ids,
             )
         )
-        entity_ids.update(
-            await _fetch_first_column(
-                cur,
-                f"""
-                SELECT prompt_id
-                FROM helen.chat_prompts
-                WHERE chat_id IN ({_placeholders(chat_ids)})
-                """,
-                chat_ids,
-            )
-        )
-
     trend_block_ids = await _fetch_first_column(
         cur,
         """
@@ -76,7 +64,8 @@ async def delete_mobile_account(cur, mobile, entity_id):
     entity_ids.update(practice_ids)
 
     if chat_ids:
-        deleted_rows["chat_prompts"] = await _delete_where_in(cur, "helen.chat_prompts", "chat_id", chat_ids)
+        # Prompt versions are global application configuration, not user data.
+        deleted_rows["chat_prompts"] = 0
         deleted_rows["chat_blocks"] = await _delete_where_in(cur, "helen.chat_blocks", "chat_id", chat_ids)
         deleted_rows["chat_index"] = await _delete_where_in(cur, "helen.chat_index", "chat_id", chat_ids)
     else:

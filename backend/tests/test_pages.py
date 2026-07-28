@@ -3,7 +3,13 @@ from pathlib import Path
 from tornado.testing import AsyncHTTPTestCase
 from tornado.web import Application
 
-from app.handlers.pages import AiHealthDisclaimerPageHandler, DataDeletionPageHandler, PrivacyPolicyPageHandler, TermsPageHandler
+from app.handlers.pages import (
+    AiHealthDisclaimerPageHandler,
+    DataDeletionPageHandler,
+    PrivacyPolicyPageHandler,
+    SupportPageHandler,
+    TermsPageHandler,
+)
 
 
 class TestLegalPages(AsyncHTTPTestCase):
@@ -13,10 +19,11 @@ class TestLegalPages(AsyncHTTPTestCase):
             (r"/terms", TermsPageHandler),
             (r"/data-deletion", DataDeletionPageHandler),
             (r"/ai-health-disclaimer", AiHealthDisclaimerPageHandler),
+            (r"/support", SupportPageHandler),
         ])
 
     def test_legal_pages_are_available_as_utf8_html(self):
-        for path in ("/privacy", "/terms", "/data-deletion", "/ai-health-disclaimer"):
+        for path in ("/privacy", "/terms", "/data-deletion", "/ai-health-disclaimer", "/support"):
             response = self.fetch(path)
             assert response.code == 200
             assert response.headers["Content-Type"].startswith("text/html")
@@ -27,6 +34,6 @@ def test_all_static_pages_referenced_by_handlers_exist():
     static_dir = Path(__file__).resolve().parents[1] / "static"
     expected = {
         "login.html", "chat.html", "daily_quote.html", "mobile_chat_lookup.html", "trend_report.html",
-        "privacy_policy.html", "terms.html", "data_deletion.html", "ai_health_disclaimer.html",
+        "privacy_policy.html", "terms.html", "data_deletion.html", "ai_health_disclaimer.html", "support.html",
     }
     assert expected <= {path.name for path in static_dir.glob("*.html")}

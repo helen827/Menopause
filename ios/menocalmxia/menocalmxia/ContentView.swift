@@ -558,16 +558,17 @@ private struct MeditationBreathingView: View {
                     await saveCurrentPractice(resetFor: selectedMode)
                 }
             }
-            .onChange(of: selectedMode) { previousMode, newMode in
+            .onChange(of: selectedMode) { newMode in
+                let previousMode = sessionModeIndex
                 Task {
                     await saveCurrentPractice(resetFor: newMode, modeIndexOverride: previousMode)
                 }
                 audioPlayer.play(fileName: currentMode.audioFileName, enabled: soundEnabled && isRunning)
             }
-            .onChange(of: soundEnabled) {
+            .onChange(of: soundEnabled) { _ in
                 audioPlayer.setEnabled(soundEnabled && isRunning, fileName: currentMode.audioFileName)
             }
-            .onChange(of: isRunning) { _, running in
+            .onChange(of: isRunning) { running in
                 updateRunningState(running)
                 audioPlayer.setEnabled(soundEnabled && isRunning, fileName: currentMode.audioFileName)
             }
@@ -1535,7 +1536,7 @@ private struct AIChatView: View {
                             .padding(.horizontal, 18)
                             .padding(.vertical, 18)
                         }
-                        .onChange(of: viewModel.comments) { _, comments in
+                        .onChange(of: viewModel.comments) { comments in
                             guard let last = comments.last else { return }
                             withAnimation(.easeOut(duration: 0.22)) {
                                 proxy.scrollTo(last.id, anchor: .bottom)
@@ -3510,7 +3511,7 @@ private struct MedicalChecklistView: View {
         .task {
             await loadMedicalChecklist()
         }
-        .onChange(of: selectedRange) {
+        .onChange(of: selectedRange) { _ in
             Task {
                 await loadMedicalChecklist()
             }
@@ -4629,7 +4630,7 @@ private struct RecordReminderSettingsView: View {
                     .labelsHidden()
                     .datePickerStyle(.compact)
             }
-            .onChange(of: settings.weeklyReport.weekday) {
+            .onChange(of: settings.weeklyReport.weekday) { _ in
                 Task { await updateReminder(.weeklyReport) }
             }
         }

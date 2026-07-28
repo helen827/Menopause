@@ -39,6 +39,7 @@ from app.handlers.pages import (
     LoginPageHandler,
     MobileChatLookupPageHandler,
     PrivacyPolicyPageHandler,
+    SupportPageHandler,
     TermsPageHandler,
     TrendReportPageHandler,
 )
@@ -74,6 +75,7 @@ def make_app(mysql_pool):
             (r"/data-deletion", DataDeletionPageHandler),
             (r"/consent-withdrawal", DataDeletionPageHandler),
             (r"/ai-health-disclaimer", AiHealthDisclaimerPageHandler),
+            (r"/support", SupportPageHandler),
             (r"/daily_quote", DailyQuotePageHandler),
             (r"/mobile_chat_lookup", MobileChatLookupPageHandler),
             (r"/trend_report", TrendReportPageHandler),

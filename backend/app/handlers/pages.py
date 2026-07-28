@@ -61,3 +61,7 @@ class DataDeletionPageHandler(StaticLegalPageHandler):
 
 class AiHealthDisclaimerPageHandler(StaticLegalPageHandler):
     filename = "ai_health_disclaimer.html"
+
+
+class SupportPageHandler(StaticLegalPageHandler):
+    filename = "support.html"

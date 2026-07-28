@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS helen.sms_verify_logs (
   action ENUM('send', 'check') NOT NULL,
   success TINYINT(1) NOT NULL DEFAULT 0,
   request_id VARCHAR(128) DEFAULT NULL,
-  message VARCHAR(512) DEFAULT NULL,
+  message TEXT DEFAULT NULL,
   verify_result VARCHAR(64) DEFAULT NULL,
   createtime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
@@ -37,6 +37,9 @@ CREATE TABLE IF NOT EXISTS helen.sms_verify_logs (
   KEY idx_sms_verify_out_id (out_id),
   KEY idx_sms_verify_createtime (createtime)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE helen.sms_verify_logs
+  MODIFY COLUMN message TEXT DEFAULT NULL;
 
 CREATE TABLE IF NOT EXISTS helen.abuse_events (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -135,6 +138,30 @@ SET @prompt_showoff_ddl := IF(
 PREPARE prompt_showoff_stmt FROM @prompt_showoff_ddl;
 EXECUTE prompt_showoff_stmt;
 DEALLOCATE PREPARE prompt_showoff_stmt;
+
+-- Prompt versions are application-wide. Preserve the newest active legacy
+-- version, then move every existing prompt into the shared global scope.
+SET @global_prompt_chat_id := REPEAT('0', 32);
+INSERT INTO helen.chat_prompts
+  (prompt_id, chat_id, title, `desc`, system_prompt, is_active, showoff)
+SELECT
+  REPLACE(UUID(), '-', ''),
+  @global_prompt_chat_id,
+  'default-v1',
+  '全新安装时自动创建的应用级默认版本',
+  '你是潮安应用里的 AI 对话助手。请用中文、温和、清晰地回应用户。',
+  1,
+  1
+WHERE NOT EXISTS (SELECT 1 FROM helen.chat_prompts LIMIT 1);
+SET @global_active_prompt_id := (
+  SELECT prompt_id
+  FROM helen.chat_prompts
+  ORDER BY is_active DESC, id DESC
+  LIMIT 1
+);
+UPDATE helen.chat_prompts
+SET chat_id = @global_prompt_chat_id,
+    is_active = IF(prompt_id = @global_active_prompt_id, 1, 0);
 
 CREATE TABLE IF NOT EXISTS helen.chat_blocks (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
