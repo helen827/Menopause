@@ -52,7 +52,7 @@ class Settings:
     deepseek_base_url: str = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
     deepseek_model: str = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
     deepseek_max_history: int = int(os.getenv("DEEPSEEK_MAX_HISTORY", "40"))
-    deepseek_max_tokens: int = int(os.getenv("DEEPSEEK_MAX_TOKENS", "1200"))
+    deepseek_max_tokens: int = int(os.getenv("DEEPSEEK_MAX_TOKENS", "3000"))
 
     security_enabled: bool = _bool_env("SECURITY_ENABLED", True)
     security_audit_enabled: bool = _bool_env("SECURITY_AUDIT_ENABLED", True)

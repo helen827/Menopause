@@ -42,25 +42,21 @@ class ChatBaseHandler(BaseHandler):
         return value
 
     def current_user_entity_id(self):
-        block_id = str(self._param("user_id", "") or self._param("entity_id", "") or "").strip().lower()
-        if block_id:
-            if not get_settings().debug:
-                raise tornado.web.HTTPError(401, reason="login required")
+        raw_session = self.get_signed_cookie(SESSION_COOKIE_NAME)
+        if raw_session:
+            try:
+                session = json.loads(raw_session.decode("utf-8") if isinstance(raw_session, bytes) else raw_session)
+            except json.JSONDecodeError as exc:
+                raise tornado.web.HTTPError(401, reason="invalid login session") from exc
+            block_id = str(session.get("block_id", "")).strip().lower()
             if not HEX32_RE.fullmatch(block_id):
-                raise tornado.web.HTTPError(400, reason="user_id must be a 32-character hex string")
+                raise tornado.web.HTTPError(401, reason="invalid login session")
             return block_id
 
-        raw_session = self.get_signed_cookie(SESSION_COOKIE_NAME)
-        if not raw_session:
-            raise tornado.web.HTTPError(401, reason="login required")
-        try:
-            session = json.loads(raw_session.decode("utf-8") if isinstance(raw_session, bytes) else raw_session)
-        except json.JSONDecodeError as exc:
-            raise tornado.web.HTTPError(401, reason="invalid login session") from exc
-        block_id = str(session.get("block_id", "")).strip().lower()
-        if not HEX32_RE.fullmatch(block_id):
-            raise tornado.web.HTTPError(401, reason="invalid login session")
-        return block_id
+        if self.is_local_debug_request:
+            return self.local_debug_user_entity_id
+
+        raise tornado.web.HTTPError(401, reason="login required")
 
     @property
     def deepseek_service(self):
@@ -246,6 +242,7 @@ class ChatSubmitHandler(ChatBaseHandler):
                 "createtime": now_iso(),
                 "model": deepseek["model"],
                 "usage": deepseek["usage"],
+                "finish_reason": deepseek.get("finish_reason"),
                 "history_count": context["history_count"],
                 "omitted_count": context["omitted_count"],
                 "system_prompt": context["active_prompt"],

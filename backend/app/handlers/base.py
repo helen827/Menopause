@@ -1,9 +1,20 @@
+import ipaddress
 import json
 
 import tornado.web
 
 from app.config import get_settings
 from app.services.security import SecurityGuard, record_abuse_event, raise_for_abuse
+
+
+LOCAL_DEBUG_USER_ENTITY_ID = "1" * 32
+
+
+def is_loopback_ip(value):
+    try:
+        return ipaddress.ip_address(str(value or "").strip()).is_loopback
+    except ValueError:
+        return False
 
 
 class BaseHandler(tornado.web.RequestHandler):
@@ -22,6 +33,14 @@ class BaseHandler(tornado.web.RequestHandler):
     @property
     def client_ip(self):
         return self.request.remote_ip or ""
+
+    @property
+    def is_local_debug_request(self):
+        return get_settings().debug and is_loopback_ip(self.client_ip)
+
+    @property
+    def local_debug_user_entity_id(self):
+        return LOCAL_DEBUG_USER_ENTITY_ID
 
     async def prepare(self):
         decision = self.security_guard.check_request(

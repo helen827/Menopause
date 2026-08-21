@@ -96,7 +96,7 @@ DEEPSEEK_API_KEY=你的DeepSeekKey
 DEEPSEEK_BASE_URL=https://api.deepseek.com
 DEEPSEEK_MODEL=deepseek-chat
 DEEPSEEK_MAX_HISTORY=40
-DEEPSEEK_MAX_TOKENS=1200
+DEEPSEEK_MAX_TOKENS=3000
 ```
 
 `/api/chat/submit` 默认会调用 DeepSeek：先存用户消息，再用当前应用级全局 system prompt 和最近消息构造上下文，最后把 assistant 回复也存回同一个 chat。每条消息会保存当时的 prompt 版本快照，后续切换全局版本不会改写历史。需要只存用户消息时，可以传 `{"ask_ai": false}`。每次提交聊天后，接口也会自动刷新当前用户的身体变化趋势 block，把 `7d`、`30d`、`90d` 三个周期的概况、高频症状、睡眠趋势、可能触发因素和推荐下一步写入 `trend_report_blocks` 对应的实体 body。

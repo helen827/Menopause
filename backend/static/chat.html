@@ -536,8 +536,6 @@
 
       <section class="panel">
         <h2 class="panel-title">Chat</h2>
-        <label for="userIdInput">测试 user_id</label>
-        <input id="userIdInput" maxlength="32" spellcheck="false" placeholder="未登录时可填 32 位 uuid">
         <div class="button-row">
           <button id="ensureButton" class="primary" type="button">准备 Chat</button>
           <button id="loadButton" type="button">加载最近</button>
@@ -549,7 +547,7 @@
         <div class="button-row single">
           <button id="connectButton" type="button">连接当前 chat_id</button>
         </div>
-        <p class="hint">已经网页登录时不用填 user_id；没有 cookie 时，填一个 32 位 hex user_id 可以直接做本地联调。</p>
+        <p class="hint">本地调试时会自动使用隔离的测试身份；线上环境仍需正常登录。</p>
       </section>
 
       <section class="panel">
@@ -651,7 +649,6 @@
     const countMeta = document.querySelector("#countMeta");
     const showoffMeta = document.querySelector("#showoffMeta");
     const blockMeta = document.querySelector("#blockMeta");
-    const userIdInput = document.querySelector("#userIdInput");
     const chatIdInput = document.querySelector("#chatIdInput");
     const lastCommentInput = document.querySelector("#lastCommentInput");
     const promptTitleInput = document.querySelector("#promptTitleInput");
@@ -809,14 +806,21 @@
         if (data.logged_in) {
           sessionUserId = data.block_id;
           userMeta.textContent = data.mobile || data.block_id;
-          userIdInput.value = "";
           setBadge(loginBadge, "已登录", "ok");
           log(`登录用户：${data.block_id}`);
           return data;
         }
+        if (data.local_debug) {
+          sessionUserId = data.block_id;
+          userMeta.textContent = "local test";
+          setBadge(loginBadge, "本地测试", "ok");
+          openLoginButton.hidden = true;
+          log("已启用本地免登录测试身份");
+          return data;
+        }
         setBadge(loginBadge, "未登录");
         userMeta.textContent = "none";
-        log("没有登录 cookie，可使用测试 user_id");
+        log("没有登录 cookie");
         return data;
       } catch (error) {
         setBadge(loginBadge, "检查失败", "error");
@@ -826,22 +830,12 @@
     }
 
     async function ensureChat() {
-      const userId = userIdInput.value.trim();
-      const payload = {};
-      if (userId) {
-        if (!isHex32(userId)) {
-          log("测试 user_id 必须是 32 位 hex");
-          userIdInput.focus();
-          return;
-        }
-        payload.user_id = userId;
-      }
       ensureButton.disabled = true;
       try {
         const data = await requestJson("/api/chat/ensure", {
           method: "POST",
           headers: {"Content-Type": "application/json"},
-          body: JSON.stringify(payload),
+          body: JSON.stringify({}),
         });
         updateChatMeta(data);
         userMeta.textContent = data.user_entity_id || sessionUserId || "none";
@@ -1234,7 +1228,7 @@
       }
     }
 
-    [userIdInput, chatIdInput, lastCommentInput].forEach((input) => {
+    [chatIdInput, lastCommentInput].forEach((input) => {
       input.addEventListener("input", () => sanitizeHexInput(input));
     });
 
@@ -1259,7 +1253,7 @@
 
     checkLogin().then((data) => {
       loadKnowledge();
-      if (data && data.logged_in) {
+      if (data && (data.logged_in || data.local_debug)) {
         ensureChat();
       } else {
         renderEmpty();

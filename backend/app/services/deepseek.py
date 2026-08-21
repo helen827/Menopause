@@ -52,7 +52,8 @@ class DeepSeekService:
         choices = payload.get("choices") or []
         if not choices:
             raise DeepSeekError("DeepSeek response has no choices")
-        message = choices[0].get("message") or {}
+        choice = choices[0]
+        message = choice.get("message") or {}
         content = str(message.get("content") or "").strip()
         if not content:
             raise DeepSeekError("DeepSeek response content is empty")
@@ -61,6 +62,7 @@ class DeepSeekService:
             "content": content,
             "model": payload.get("model") or self.model,
             "usage": payload.get("usage") or {},
+            "finish_reason": choice.get("finish_reason"),
         }
 
 

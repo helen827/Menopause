@@ -266,6 +266,16 @@ class CheckLoginHandler(AuthBaseHandler):
     async def _handle(self):
         session = self._current_session()
         if not session:
+            if self.is_local_debug_request:
+                self.write_json(
+                    {
+                        "logged_in": False,
+                        "local_debug": True,
+                        "block_id": self.local_debug_user_entity_id,
+                        "data": "none",
+                    }
+                )
+                return
             self.write_json({"logged_in": False, "data": "none"})
             return
 
