@@ -53,3 +53,14 @@ footer {
   color: #746a70;
   font-size: 14px;
 }
+
+.icp-filing {
+  display: block;
+  margin-top: 12px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.icp-filing:hover {
+  text-decoration: underline;
+}

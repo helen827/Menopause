@@ -37,3 +37,19 @@ def test_all_static_pages_referenced_by_handlers_exist():
         "privacy_policy.html", "terms.html", "data_deletion.html", "ai_health_disclaimer.html", "support.html",
     }
     assert expected <= {path.name for path in static_dir.glob("*.html")}
+
+
+def test_public_pages_display_icp_filing_link():
+    static_dir = Path(__file__).resolve().parents[1] / "static"
+    for filename in (
+        "login.html",
+        "privacy_policy.html",
+        "terms.html",
+        "data_deletion.html",
+        "ai_health_disclaimer.html",
+        "support.html",
+    ):
+        content = (static_dir / filename).read_text(encoding="utf-8")
+        assert "沪ICP备2026034440号-1" in content
+        assert "沪ICP备2026034440号-2A" not in content
+        assert 'href="https://beian.miit.gov.cn/"' in content

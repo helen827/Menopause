@@ -1992,6 +1992,24 @@ private struct MineTab: View {
                         }
                         .padding(.top, 4)
 
+                        Link(destination: appFilingURL) {
+                            HStack(spacing: 10) {
+                                Image(systemName: "checkmark.seal.fill")
+                                    .font(.system(size: 15, weight: .bold))
+
+                                Text("App 备案号：沪ICP备2026034440号-2A")
+                                    .font(.system(size: 13, weight: .semibold))
+
+                                Image(systemName: "arrow.up.forward")
+                                    .font(.system(size: 11, weight: .bold))
+                            }
+                            .foregroundStyle(AppTheme.inkSoft)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("App 备案号沪ICP备2026034440号-2A，打开工信部备案系统")
+
                         if let session = sessionStore.session {
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("mobile: \(session.mobile)")
@@ -2202,6 +2220,10 @@ private struct MineTab: View {
             MineNavItem(title: "记录提醒", desc: reminderSummaryText, icon: "bell.fill", route: "record_reminder"),
             MineNavItem(title: "数据与隐私", desc: "查看隐私政策", icon: "shield.lefthalf.filled", route: "privacy"),
         ]
+    }
+
+    private var appFilingURL: URL {
+        URL(string: "https://beian.miit.gov.cn/")!
     }
 
     private var reminderSummaryText: String {
