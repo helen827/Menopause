@@ -1,4 +1,4 @@
-tornado==6.4.2
+tornado==6.5.8
 aiomysql==0.2.0
 python-dotenv==1.0.1
 cryptography==43.0.3
